@@ -3,6 +3,7 @@ import React,{useEffect,useMemo,useState} from 'react';
 import {createRoot} from 'react-dom/client';
 import {DemoBadges} from './DemoBadges';
 import {EmployeeReview} from './EmployeeReview';
+import {EmployeeWorkspace} from './EmployeeWorkspace';
 import {Stars,dateLabel,scoreLabel,sourceLabel} from './workforce-ui';
 import {canonicalName,employeeStats,workforceDemo,type Employee,type EmployeeRating,type SavedReview,type ReviewSummary,type EmployeeAppeal} from './workforce-model';
 import {useWorkforceAccess,listEmployees,listRatings,createEmployee,inviteEmployee,listReviews,getReview,listAppeals,submitAppeal,resolveAppeal} from './workforce-client';
@@ -10,6 +11,15 @@ import {score,uid,type Rating} from './qa-model';
 
 function EmployeesPage(){
  const access=useWorkforceAccess(),[demo,setDemo]=useState(false),[demoRole,setDemoRole]=useState<'manager'|'worker'>('manager'),[badges,setBadges]=useState(false);
+ const worker=!!access.user&&!access.manager;
+ useEffect(()=>{
+  const checks=[...document.querySelectorAll<HTMLButtonElement>('.segment[data-panel="check"]')],links=[...document.querySelectorAll<HTMLElement>('.segment[data-panel="employees"]')];
+  document.body.dataset.workspaceRole=access.loading?'loading':worker?'employee':access.manager?'manager':'guest';
+  checks.forEach(button=>{button.hidden=access.loading||worker;});links.forEach(button=>{button.textContent=worker?'Мой кабинет':'Сотрудники';});
+  document.title=worker?'Мой кабинет — Freedom Workspace':'Сотрудники — Freedom Bank';
+ },[access.loading,access.manager,worker]);
+ if(access.loading)return <div className="wf-page"><div className="wf-empty" role="status">Загружаем рабочий кабинет…</div></div>;
+ if(worker)return <EmployeeWorkspace key={access.user!.id} userId={access.user!.id}/>;
  if(badges)return <><div className="wf-toolbar"><button className="button button-secondary" onClick={()=>setBadges(false)}>К рейтингам сотрудников</button></div><DemoBadges/></>;
  return <div className="wf-page"><div className="wf-page-head"><div><span className="wf-kicker">FREEDOM / КАЧЕСТВО КОМАНДЫ</span><h1>За каждым диалогом — <em>человек.</em></h1></div><div className="wf-actions"><button className="button button-secondary" onClick={()=>setBadges(true)}>Бейджи команды</button><button className="button button-secondary" onClick={()=>setDemo(!demo)}>{demo?'Мои данные':'Учебный пример'}</button></div></div>
  {demo&&<div className="wf-demo-banner"><p>Учебная команда · вымышленные разговоры и подготовленные оценки. Изменения этого примера не отправляются в базу.</p><div className="wf-actions"><button className={'wf-tab '+(demoRole==='manager'?'active':'')} onClick={()=>setDemoRole('manager')}>Руководитель</button><button className={'wf-tab '+(demoRole==='worker'?'active':'')} onClick={()=>setDemoRole('worker')}>Сотрудник: Лера</button></div></div>}

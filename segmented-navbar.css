@@ -1,6 +1,7 @@
 /* SegmentedControl, adapted from Klyv UI, © 2026 Klyv contributors.
    MIT license: assets/segmented-control-license.txt. */
 .navigation.segmented-nav{display:inline-flex;padding:0;border:0;gap:0;background:none;box-shadow:none;border-radius:999px}
+.segment[hidden]{display:none!important}
 .segmented-control{
   --segment-surface:#192017;--segment-ink:#edf3e6;--segment-soft:#aebba5;
   display:inline-flex;align-items:center;gap:2px;padding:4px;border-radius:999px;

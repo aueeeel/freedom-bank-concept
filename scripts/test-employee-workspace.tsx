@@ -1,0 +1,20 @@
+import assert from 'node:assert/strict';
+import React from 'react';
+import {renderToStaticMarkup} from 'react-dom/server';
+import {EmployeeWorkspaceView} from '../src/EmployeeWorkspace';
+import {EmployeeReview} from '../src/EmployeeReview';
+import {workforceDemo,type EmployeeAppeal} from '../src/workforce-model';
+
+const seed=workforceDemo(),person={...seed.people[0],account_email:'employee@example.com'},review={...seed.reviews[0],review_source:'ai' as const};
+const props={person,history:[review],appeals:[],tab:'history' as const,page:0,count:1,loading:false,busy:false,onTab:()=>{},onPage:()=>{},onOpen:()=>{}};
+const home=renderToStaticMarkup(<EmployeeWorkspaceView {...props}/>);
+for(const control of ['Добавить сотрудника','Проверка разговоров','Все сотрудники','Бейджи команды','Учебный пример','Настройки профиля и приглашение'])assert.ok(!home.includes(control),`Employee home exposed reviewer control: ${control}`);
+assert.ok(home.includes('Мои разговоры'));assert.ok(home.includes('Мои апелляции'));assert.ok(home.includes(review.name));assert.ok(home.includes('Перевернуть карточку сотрудника'));
+const pending:EmployeeAppeal={id:'appeal',conversation_id:review.id,criterion_id:review.checklist[0].id,comment:'Проверьте реплику',author_id:'worker',status:'pending',decision_reason:null,created_at:review.created_at,decided_at:null};
+const callbacks={review,appeals:[pending],busy:false,onClose:()=>{},onAppeal:async()=>{},onDecision:async()=>{}};
+const worker=renderToStaticMarkup(<EmployeeReview {...callbacks} manager={false} worker/>);
+assert.ok(worker.includes('Отправить апелляцию'));assert.ok(!worker.includes('Рассмотреть апелляцию'));assert.ok(!worker.includes('Причина решения по апелляции'));
+const manager=renderToStaticMarkup(<EmployeeReview {...callbacks} manager worker={false}/>);
+assert.ok(manager.includes('Рассмотреть апелляцию'));assert.ok(!manager.includes('Отправить апелляцию'));
+const empty=renderToStaticMarkup(<EmployeeWorkspaceView {...props} history={[]} count={0}/>);assert.ok(empty.includes('Рейтинг появится'));assert.ok(!empty.includes('Назад'));assert.ok(!empty.includes('Далее'));
+console.log('Employee workspace checks passed: personal controls, reviewer controls excluded, review details and appeal roles, empty history, interactive identity card.');
