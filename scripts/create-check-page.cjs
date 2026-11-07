@@ -7,7 +7,7 @@ html=html.replace('<title>Freedom Bank — Свобода быть собой</t
  .replace('<body>','<body class="check-page">')
  .replace(/<div class="site-background" data-video-surface[\s\S]*?<\/div><\/div>/,'')
  .replace('<script src="media.js" defer></script>','')
- .replace('<link rel="stylesheet" href="auth.css">','<link rel="stylesheet" href="auth.css"><link rel="stylesheet" href="qa.css">')
+ .replace('<link rel="stylesheet" href="auth.css">','<link rel="stylesheet" href="auth.css"><link rel="stylesheet" href="qa.css"><link rel="stylesheet" href="workforce.css">')
  .replace('<script src="app.js" defer></script>','<script src="app.js" defer></script><script src="qa-config.js" defer></script><script src="qa.js" defer></script>')
  .replace('class="brand" href="#"','class="brand" href="/"')
  .replace(/  <section class="hero"[\s\S]*?  <\/section>/,'  <section id="qa-root" aria-label="Проверка качества диалогов"><noscript>Для проверки файлов включите JavaScript.</noscript></section>')

@@ -1,0 +1,28 @@
+import {useEffect,useState} from 'react';
+import type {SupabaseClient,User} from '@supabase/supabase-js';
+import {validateChecklist,type Conversation,type Criterion,type Rating} from './qa-model';
+import {conversationFingerprint,type Employee,type EmployeeRating,type SavedReview,type ReviewSummary,type EmployeeAppeal} from './workforce-model';
+
+declare global{interface Window{FreedomAuth?:{open:(mode?:string)=>void;getClient?:()=>SupabaseClient|null;getUser?:()=>{id:string;email?:string}|null}}}
+export type Access={loading:boolean;user:User|null;manager:boolean;error:string};
+export const db=()=>{const client=window.FreedomAuth?.getClient?.();if(!client)throw Error('Вход временно недоступен.');return client;};
+function checked<T>({data,error}:{data:T;error:any}):T{if(error)throw Error(error.code==='42501'?'Недостаточно прав для этого действия.':error.message||'Не удалось загрузить данные.');return data;}
+export function useWorkforceAccess(){const[state,setState]=useState<Access>({loading:true,user:null,manager:false,error:''});useEffect(()=>{let active=true;let sequence=0;const load=async()=>{const call=++sequence;try{const client=db();const auth=await client.auth.getUser();if(!active||call!==sequence)return;const user=auth.data.user;if(!user){setState({loading:false,user:null,manager:false,error:''});return;}const rows=checked(await client.from('cqa_managers').select('user_id').eq('user_id',user.id));if(active&&call===sequence)setState({loading:false,user,manager:!!rows?.length,error:''});}catch(e){if(active&&call===sequence)setState({loading:false,user:null,manager:false,error:(e as Error).message});}};const change=()=>{setState({loading:true,user:null,manager:false,error:''});setTimeout(load,0);};load();window.addEventListener('freedom-auth-change',change);return()=>{active=false;window.removeEventListener('freedom-auth-change',change);};},[]);return state;}
+export async function listEmployees():Promise<Employee[]>{return checked(await db().from('cqa_employees').select('*').order('name'))??[];}
+export async function listRatings():Promise<EmployeeRating[]>{return checked(await db().from('cqa_employee_ratings').select('*').order('name'))??[];}
+export async function createEmployee(name:string,aliases:string[]=[]):Promise<Employee>{if(name.trim().length<2)throw Error('Укажите имя сотрудника.');return checked(await db().from('cqa_employees').insert({name:name.trim(),aliases:aliases.map(a=>a.trim()).filter(Boolean)}).select('*').single());}
+export async function editEmployee(id:string,name:string,aliases:string[]){checked(await db().from('cqa_employees').update({name:name.trim(),aliases}).eq('id',id).select('id').single());}
+export async function linkEmployee(id:string,email:string){checked(await db().rpc('cqa_link_employee',{p_employee_id:id,p_email:email.trim()}));}
+export async function saveReview(c:Conversation,checklist:Criterion[],employeeId:string,evidence:string[]):Promise<{id:string;version:number}>{
+ validateChecklist(checklist);if(c.demo)throw Error('Учебный пример не сохраняется в рейтинги настоящей команды.');if(!c.transcript.length)throw Error('Сначала загрузите транскрипт разговора.');
+ const fingerprint=await conversationFingerprint(c);const old=checked(await db().from('cqa_conversations').select('id,version').eq('fingerprint',fingerprint).maybeSingle());
+ if(old&&(!c.savedReviewId||old.id!==c.savedReviewId||old.version!==c.savedVersion))throw Error('Этот разговор уже сохранён или изменился. Откройте его в профиле: повторная загрузка не перезаписывает оценки и апелляции.');
+ const payload={employee_id:employeeId,fingerprint,source_id:c.sourceId??null,name:c.name,language:c.language,channel:c.channel,transcript:c.transcript,checklist,evaluations:c.evaluations,assignment_evidence:evidence,review_source:c.demo?'demo':c.reviewSource??'manual'};
+ const query=old?db().from('cqa_conversations').update(payload).eq('id',old.id).eq('version',old.version):db().from('cqa_conversations').insert(payload);
+ const result=checked(await query.select('id,version').maybeSingle());if(!result)throw Error('Разбор изменился в другом окне. Обновите профиль перед сохранением.');return result;
+}
+export async function listReviews(employeeId:string,page=0):Promise<{rows:ReviewSummary[];count:number}>{const result=await db().from('cqa_conversations').select('id,employee_id,name,language,channel,score,review_source,created_at,version,source_id',{count:'exact'}).eq('employee_id',employeeId).order('created_at',{ascending:false}).range(page*20,page*20+19);checked(result);return{rows:result.data??[],count:result.count??0};}
+export async function getReview(id:string):Promise<SavedReview>{return checked(await db().from('cqa_conversations').select('*').eq('id',id).single());}
+export async function listAppeals(conversationId?:string):Promise<EmployeeAppeal[]>{const all:EmployeeAppeal[]=[];for(let offset=0;;offset+=500){let query=db().from('cqa_appeals').select('*,cqa_conversations(name,employee_id)').order('created_at',{ascending:false}).order('id');if(conversationId)query=query.eq('conversation_id',conversationId);const page=checked(await query.range(offset,offset+499))??[];all.push(...page);if(page.length<500)return all;}}
+export async function submitAppeal(conversationId:string,criterionId:string,comment:string){const {data:{user}}=await db().auth.getUser();if(!user)throw Error('Войдите в аккаунт сотрудника.');checked(await db().from('cqa_appeals').insert({conversation_id:conversationId,criterion_id:criterionId,comment:comment.trim(),author_id:user.id}));}
+export async function resolveAppeal(id:string,status:'accepted'|'rejected',value:Rating,reason:string){checked(await db().rpc('cqa_resolve_appeal',{p_id:id,p_status:status,p_value:value,p_reason:reason.trim()}));}

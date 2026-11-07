@@ -4,7 +4,7 @@ export type Criterion={id:string;name:string;section:string;definition:string;we
 export type Rating='yes'|'no'|'na'|number|null;
 export type Appeal={id:string;comment:string;createdAt:string;decision?:{value:Rating;reason:string;at:string}};
 export type Evaluation={value:Rating;reason:string;evidence:string[];appeals:Appeal[]};
-export type Conversation={id:string;sourceId?:string;name:string;language:string;channel:string;transcript:Turn[];audioUrl?:string;audioName?:string;audioUnavailable?:boolean;demo?:boolean;evaluations:Record<string,Evaluation>;events:{id:string;kind:'user'|'assistant';text:string}[]};
+export type Conversation={id:string;sourceId?:string;name:string;language:string;channel:string;transcript:Turn[];audioUrl?:string;audioName?:string;audioUnavailable?:boolean;demo?:boolean;reviewSource?:'ai'|'manual';employeeId?:string;savedReviewId?:string;savedVersion?:number;evaluations:Record<string,Evaluation>;events:{id:string;kind:'user'|'assistant';text:string}[]};
 export const speakerLabels:Record<Speaker,string>={operator:'Оператор',client:'Клиент',bot:'Бот',system:'Система',unknown:'Роль не указана'};
 export const initialChecklist:Criterion[]=[
  {id:'contact',name:'Установление контакта',section:'Начало и понимание запроса',definition:'Оператор поздоровался на языке клиента и представился в первом ответе.',weight:10,type:'binary',scale:[],allowNA:false},

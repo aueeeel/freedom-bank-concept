@@ -1,0 +1,23 @@
+import assert from 'node:assert/strict';
+import {writeFileSync} from 'node:fs';
+import {demoConversation,initialChecklist,score} from '../src/qa-model';
+import {identifyEmployee,starsFromScore,employeeStats,conversationFingerprint,type Employee} from '../src/workforce-model';
+const people:Employee[]=[{id:'lera',name:'Валерия Иванова',aliases:['Лера'],user_id:null}];
+function conversation(text:string,speaker:'operator'|'client'|'unknown'='operator'){const c=demoConversation();c.transcript=[{id:'intro',timestamp:'00:01',speaker,text}];return c;}
+assert.equal(identifyEmployee(conversation('Здравствуйте! Я Лера, помогу вам.'),people).employeeId,'lera');
+assert.equal(identifyEmployee(conversation('Здравствуйте. Меня зовут Лера. Я оператор.'),people).employeeId,'lera');
+assert.equal(identifyEmployee(conversation('Меня зовут Лера','client'),people).status,'unknown');
+assert.equal(identifyEmployee(conversation('Меня зовут Лера','unknown'),people).status,'unknown');
+assert.equal(identifyEmployee(conversation('Клиент сказал: меня зовут Лера.'),people).status,'unknown');
+assert.equal(identifyEmployee(conversation('Здравствуйте! Я Лера.'),[...people,{id:'other',name:'Валерия Петрова',aliases:['Лера'],user_id:null}]).status,'ambiguous');
+assert.equal(identifyEmployee(conversation('Меня зовут Мария Соколова. Помогу.'),people).name,'Мария Соколова');
+assert.equal(identifyEmployee(conversation('Hello, my name is Jane Doe. How can I help?'),people).name,'Jane Doe');
+assert.equal(identifyEmployee(conversation('Сәлеметсіз бе! Менің атым Алия.'),people).name,'Алия');
+const handoff=conversation('Меня зовут Лера.');handoff.transcript.push({id:'second',timestamp:'00:30',speaker:'operator',text:'Меня зовут Мария.'});assert.equal(identifyEmployee(handoff,people).status,'ambiguous');
+assert.equal(starsFromScore(80),4);assert.equal(starsFromScore(0),0);assert.equal(starsFromScore(null),null);
+const records=[{employee_id:'lera',score:80},{employee_id:'lera',score:100},{employee_id:'lera',score:null},{employee_id:'other',score:0}] as any;
+assert.deepEqual(employeeStats(records,'lera'),{count:3,rated:2,average:90,stars:4.5});
+const original=conversation('Меня зовут Лера.');const duplicate=structuredClone(original);duplicate.id='another';duplicate.transcript[0].id='new-turn';assert.equal(await conversationFingerprint(original),await conversationFingerprint(duplicate));duplicate.transcript[0].text+=' Изменение';assert.notEqual(await conversationFingerprint(original),await conversationFingerprint(duplicate));
+const demo=demoConversation();const before=score(initialChecklist,demo.evaluations).total;demo.evaluations.consultation.appeals.push({id:'a',comment:'Перепроверьте',createdAt:'test',decision:{value:20,reason:'Уточнение найдено',at:'test'}});assert.equal(demo.evaluations.consultation.value,15);assert.ok(score(initialChecklist,demo.evaluations).total!>before!);
+writeFileSync(new URL('./workforce-db-fixture.json',import.meta.url),JSON.stringify({checklist:initialChecklist,evaluations:demoConversation().evaluations}));
+console.log('Workforce checks passed: author detection RU/KZ/EN, uncertain identities, aliases, rating, unscored exclusion, duplicate fingerprint, appeal history.');

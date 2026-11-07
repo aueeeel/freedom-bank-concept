@@ -13,7 +13,7 @@ const submit = form.querySelector('.auth-submit');
 const message = form.querySelector('.auth-message');
 const account = dialog.querySelector('.account-view');
 const tabs = dialog.querySelector('.auth-tabs');
-let mode = 'login', user = null, busy = false;
+let mode = 'login', user = null, busy = false, lastPublishedUser = null;
 
 function updateHeader() {
   document.querySelectorAll('[data-auth="login"]').forEach(button => {
@@ -28,8 +28,10 @@ function renderAccount() {
     dialog.querySelector('#auth-title').textContent='Вы на своей стороне.';
     account.querySelector('.account-email').textContent=user.email||'';
     account.querySelector('.account-message').textContent='';
+    if(!account.querySelector('.account-work-profile')){const link=document.createElement('a');link.className='button button-secondary account-work-profile';link.href='employees.html?mine=1';link.textContent='Рабочий профиль';account.append(link);}
   }
   updateHeader();
+  if(lastPublishedUser!==user?.id){lastPublishedUser=user?.id;window.dispatchEvent(new CustomEvent('freedom-auth-change'));}
 }
 function setMode(next) {
   mode=next==='signup'?'signup':'login';
@@ -70,7 +72,7 @@ function errorMessage(error) {
   };
   return messages[error?.code] || (error?.name==='AuthRetryableFetchError' ? 'Нет связи с сервисом. Проверьте интернет и попробуйте снова.' : 'Не удалось выполнить запрос. Попробуйте ещё раз.');
 }
-window.FreedomAuth = {open(next='login'){
+window.FreedomAuth = {getClient(){return client;},getUser(){return user?{id:user.id,email:user.email}:null;},open(next='login'){
   if(!busy)setMode(next);
   renderAccount();
   if(!dialog.open)dialog.showModal();

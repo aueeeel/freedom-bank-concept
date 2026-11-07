@@ -7,7 +7,7 @@ html=html.replace('<title>Freedom Bank — Свобода быть собой</t
   .replace('<body>','<body class="employees-page secondary-page">')
   .replace(/<div class="site-background" data-video-surface[\s\S]*?<\/div><\/div>/,'<div class="site-background wave-background" aria-hidden="true"></div>')
   .replace('<script src="media.js" defer></script>','<script src="wave-background.js" defer></script>')
-  .replace('<link rel="stylesheet" href="auth.css">','<link rel="stylesheet" href="auth.css"><link rel="stylesheet" href="secondary.css"><link rel="stylesheet" href="team.css">')
+  .replace('<link rel="stylesheet" href="auth.css">','<link rel="stylesheet" href="auth.css"><link rel="stylesheet" href="secondary.css"><link rel="stylesheet" href="team.css"><link rel="stylesheet" href="workforce.css">')
   .replace('<script src="app.js" defer></script>','<script src="app.js" defer></script><script src="employees.js" defer></script>')
   .replace('class="brand" href="#"','class="brand" href="/"')
   .replace(/  <section class="hero"[\s\S]*?  <\/section>/,'  <section id="employees-root" class="team-content" aria-label="Сотрудники"><noscript><h1>Наша команда</h1><p>Для просмотра интерактивных бейджей нужен JavaScript.</p></noscript></section>')

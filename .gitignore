@@ -13,3 +13,7 @@ check-preview.*
 live-preview.png
 deployment-state.json
 AUTH-SETUP.md
+
+# Supabase CLI local caches
+supabase/.temp/
+supabase/.branches/
