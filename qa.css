@@ -104,3 +104,5 @@ body.check-page :is(.qa-turn.system,.qa-turn.bot) {opacity:1}
 body.check-page .qa-welcome h2 {text-shadow:none}
 body.check-page .qa-welcome-note i {background:#fff}
 body.check-page .qa-drawer::backdrop {background:#000b;backdrop-filter:none}
+
+.qa-import-mode{font-family:inherit;max-width:165px;border:1px solid #ffffff30;background:#000;color:#fff;cursor:pointer}.qa-import-mode:focus-visible{outline:2px solid #b6f34a;outline-offset:3px}.qa-import-mode:disabled{opacity:.6;cursor:default}

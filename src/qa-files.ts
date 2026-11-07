@@ -1,6 +1,7 @@
 import {newConversation,uid,type Conversation,type Speaker,type Turn} from './qa-model';
 export const ACCEPT='.json,.txt,.csv,.srt,.vtt,.pdf,.mp3,.wav,.m4a,.ogg,.webm,.aac,.flac';
 export const MAX_BYTES=20*1024*1024;
+export type ImportMode='single'|'batch';
 export function isAudio(name:string){return /\.(mp3|wav|m4a|ogg|webm|aac|flac)$/i.test(name);}
 export function role(value:unknown):Speaker{const s=String(value??'').trim().toLowerCase();if(/^(operator|agent|оператор|сотрудник|қызметкер|support)$/.test(s))return'operator';if(/^(client|customer|клиент|клиентка|user|пользователь)$/.test(s))return'client';if(/^(bot|бот|assistant)$/.test(s))return'bot';if(/^(system|система|системное сообщение)$/.test(s))return'system';return'unknown';}
 function safeAudio(raw:unknown){if(typeof raw!=='string'||!raw.trim())return undefined;try{const u=new URL(raw);return ['https:','http:'].includes(u.protocol)?u.href:undefined;}catch{return undefined;}}
@@ -16,6 +17,14 @@ export function normalizeRecords(raw:any,name='Загруженный диало
  for(const c of parsed){if(!c.sourceId){out.push(c);continue;}const g=groups.get(c.sourceId);if(g)g.push(c);else{const fresh=[c];groups.set(c.sourceId,fresh);out.push(c);}}
  return out.map(c=>{const g=c.sourceId?groups.get(c.sourceId)!:[c];return g.length>1?mergeConversations(g):c;});
 }
+export function importedConversations(parts:Conversation[],name:string,mode:ImportMode='single'):Conversation[]{
+ if(parts.some(part=>part.transcript.length>5000)||mode==='single'&&parts.reduce((n,part)=>n+part.transcript.length,0)>5000)throw Error('В одном диалоге поддерживается до 5000 реплик. Для независимых чатов выберите «Набор диалогов».');
+ if(mode==='batch'||parts.length<=1)return parts;
+ const audioURLs=[...new Set(parts.map(part=>part.audioUrl).filter(Boolean))];if(audioURLs.length>1)throw Error('В файле несколько аудиозаписей. Выберите «Набор диалогов».');
+ const combined=mergeConversations(parts);combined.name=name.slice(0,160);
+ const ids=[...new Set(parts.map(part=>part.sourceId).filter(Boolean))];combined.sourceId=ids.length===1?ids[0]:undefined;
+ return[combined];
+}
 /** Склеивает несколько частей одного разговора в один диалог, сохраняя хронологию. */
 export function mergeConversations(parts:Conversation[]):Conversation{
  if(parts.length===1)return parts[0];
@@ -28,7 +37,7 @@ export function mergeConversations(parts:Conversation[]):Conversation{
  const audio=parts.find(p=>p.audioUrl);
  const c=newConversation(first.name,transcript,parts.find(p=>p.language&&p.language!=='Не указан')?.language??first.language);
  c.sourceId=parts.find(p=>p.sourceId)?.sourceId;
- c.channel=audio?.audioName?'voice call':first.channel;
+ c.channel=audio?.audioName||parts.some(p=>p.channel==='voice call')?'voice call':parts.some(p=>p.channel==='agent chat')?'agent chat':first.channel;
  if(audio){c.audioUrl=audio.audioUrl;c.audioName=audio.audioName;}
  return c;
 }
@@ -44,7 +53,7 @@ export function parseText(text:string):Turn[]{
  return out.filter(t=>t.text.trim());
 }
 function csv(text:string){const rows:string[][]=[];let row:string[]=[],cell='',quoted=false;for(let i=0;i<text.length;i++){const ch=text[i];if(ch==='"'){if(quoted&&text[i+1]==='"'){cell+='"';i++;}else quoted=!quoted;}else if(ch===','&&!quoted){row.push(cell);cell='';}else if((ch==='\n'||ch==='\r')&&!quoted){if(ch==='\r'&&text[i+1]==='\n')i++;row.push(cell);if(row.some(c=>c.trim()))rows.push(row);row=[];cell='';}else cell+=ch;}if(quoted)throw Error('В CSV не закрыта кавычка.');row.push(cell);if(row.some(c=>c.trim()))rows.push(row);const headers=rows.shift()?.map(h=>h.trim().toLowerCase().replace(/^\uFEFF/,''))??[];if(!headers.includes('text')||!headers.includes('speaker'))throw Error('В CSV нужны колонки timestamp,speaker,text.');return rows.map(r=>Object.fromEntries(headers.map((h,i)=>[h,r[i]??''])));}
-export async function readConversationFile(file:File):Promise<Conversation[]>{
+export async function readConversationFile(file:File,mode:ImportMode='single'):Promise<Conversation[]>{
  if(file.size>MAX_BYTES)throw Error(`${file.name}: размер файла больше 20 МБ.`);
  if(isAudio(file.name)){const c=newConversation(file.name,[],'Не указан');c.channel='voice call';c.audioUrl=URL.createObjectURL(file);c.audioName=file.name;return[c];}
  const ext=file.name.split('.').pop()?.toLowerCase();if(!['txt','json','csv','srt','vtt','pdf'].includes(ext??''))throw Error(`${file.name}: этот формат не поддерживается.`);
@@ -54,7 +63,8 @@ export async function readConversationFile(file:File):Promise<Conversation[]>{
   const {readPdf}=await import(moduleURL);text=await readPdf(await file.arrayBuffer());
  }else text=await file.text();
  if(text.length>2_000_000)throw Error('В файле больше 2 миллионов символов. Разделите его на части.');
- if(ext==='json'){try{return normalizeRecords(JSON.parse(text.replace(/^\uFEFF/,'')),file.name);}catch(e){if(e instanceof SyntaxError)throw Error('Не удалось прочитать JSON. Проверьте структуру файла.');throw e;}}
+ if(ext==='json'){try{return importedConversations(normalizeRecords(JSON.parse(text.replace(/^\uFEFF/,'')),file.name),file.name,mode);}catch(e){if(e instanceof SyntaxError)throw Error('Не удалось прочитать JSON. Проверьте структуру файла.');throw e;}}
+ if(ext==='txt'&&/^[\[{]/.test(text.trim())){let structured:unknown;try{structured=JSON.parse(text.replace(/^\uFEFF/,''));}catch{/* Plain timestamped text can also begin with a bracket. */}if(structured!==undefined)return importedConversations(normalizeRecords(structured,file.name),file.name,mode);}
  if(ext==='csv')return normalizeRecords({transcript:csv(text)},file.name);
  const transcript=parseText(text);if(!transcript.length)throw Error('В файле не найден текст диалога.');return[newConversation(file.name,transcript,'Не указан')];
 }

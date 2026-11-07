@@ -3,6 +3,7 @@
 import React,{useEffect,useRef,useState} from 'react';
 import type {Employee,EmployeeRating} from './workforce-model';
 import {Stars} from './workforce-ui';
+import {EmployeeAvatar} from './EmployeeAvatar';
 
 export function EmployeeIdentityCard({person,stat}:{person:Employee;stat?:EmployeeRating}){
  const [flipped,setFlipped]=useState(false),button=useRef<HTMLButtonElement>(null);
@@ -20,7 +21,6 @@ export function EmployeeIdentityCard({person,stat}:{person:Employee;stat?:Employ
   if(!state.reduce&&Math.abs(state.tx-state.x)+Math.abs(state.ty-state.y)>.02)state.frame=requestAnimationFrame(animate);else{state.frame=0;state.last=0;}
  }
  function reset(){const state=motion.current;state.tx=state.ty=0;if(!state.frame)state.frame=requestAnimationFrame(animate);}
- const initials=person.name.split(/\s+/).map(word=>word[0]).slice(0,2).join('');
  return <div className="wf-id-wrap"><div className="wf-id-stage" onPointerMove={event=>{
    const rect=event.currentTarget.getBoundingClientRect(),x=Math.max(0,Math.min(1,(event.clientX-rect.left)/rect.width)),y=Math.max(0,Math.min(1,(event.clientY-rect.top)/rect.height));
    button.current?.style.setProperty('--id-mx',`${(x*100).toFixed(2)}%`);button.current?.style.setProperty('--id-my',`${(y*100).toFixed(2)}%`);
@@ -30,7 +30,7 @@ export function EmployeeIdentityCard({person,stat}:{person:Employee;stat?:Employ
    <span className="wf-id-turn">
     <span className="wf-id-face wf-id-front" aria-hidden={flipped}>
      <span className="wf-id-sky"><span className="wf-id-top"><span className="wf-id-brand"><img src="assets/freedom-logo.png" alt="Freedom Bank" draggable={false}/></span><span>WORKSPACE<br/>ЛИЧНАЯ КАРТА</span></span>
-      <span className="wf-id-person"><span><span className="wf-id-greeting">Привет, я</span><strong>{person.name}</strong><span className="wf-id-role">Сотрудник поддержки</span></span><span className="wf-id-seal" aria-hidden="true">{initials}</span></span>
+      <span className="wf-id-person"><span><span className="wf-id-greeting">Привет, я</span><strong>{person.name}</strong><span className="wf-id-role">Сотрудник поддержки</span></span><span className="wf-id-seal"><EmployeeAvatar person={person} className="wf-id-avatar"/></span></span>
      </span>
      <span className="wf-id-strip"><span>FREEDOM TEAM</span><span>Мой рабочий профиль</span></span>
      <span className="wf-id-foil" aria-hidden="true"/><span className="wf-id-glare" aria-hidden="true"/>
