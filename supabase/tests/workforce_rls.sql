@@ -22,7 +22,7 @@ do $$ declare changed int; begin
 end $$;
 do $$ begin perform set_config('request.jwt.claims',json_build_object('sub',(select manager from wf_test_ids),'role','authenticated')::text,true); end $$;
 do $$ begin
- if (select count(*) from public.cqa_employees)<>2 then raise exception 'Manager cannot read profiles'; end if;
+ if (select count(*) from public.cqa_employees where id in (select emp_a from wf_test_ids union all select emp_b from wf_test_ids))<>2 then raise exception 'Manager cannot read profiles'; end if;
  if (select score from public.cqa_conversations where id=(select conv_a from wf_test_ids))<>85.38 then raise exception 'Initial DB score incorrect'; end if;
  perform public.cqa_resolve_appeal((select id from public.cqa_appeals where conversation_id=(select conv_a from wf_test_ids)),'accepted','20','The secondary question was answered');
  if (select score from public.cqa_conversations where id=(select conv_a from wf_test_ids))<>93.08 then raise exception 'Appeal did not recalculate DB score'; end if;

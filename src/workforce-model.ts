@@ -1,6 +1,6 @@
 import {score,initialChecklist,demoConversation,uid,type Conversation,type Criterion,type Evaluation} from './qa-model';
 
-export type Employee={id:string;name:string;aliases:string[];user_id:string|null;account_email?:string|null;created_at?:string};
+export type Employee={id:string;name:string;aliases:string[];user_id:string|null;account_email?:string|null;created_at?:string;invitation_status?:'not_sent'|'sending'|'sent'|'error';invited_at?:string|null;invitation_error?:string|null};
 export type Identity={name:string|null;employeeId:string|null;status:'matched'|'new'|'ambiguous'|'unknown';evidence:string[];candidates:string[]};
 export type ReviewSummary={id:string;employee_id:string|null;name:string;language:string;channel:string;score:number|null;review_source:'ai'|'manual'|'demo';created_at:string;version:number;source_id?:string};
 export type SavedReview=ReviewSummary&{transcript:Conversation['transcript'];checklist:Criterion[];evaluations:Record<string,Evaluation>;assignment_evidence:string[]};
