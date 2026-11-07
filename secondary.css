@@ -1,0 +1,6 @@
+.wave-background{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none;background:radial-gradient(90% 50% at 50% 25%,#86b95310,transparent 70%),#070b07}
+.wave-background canvas{position:absolute;inset:0;width:100%;height:100%;display:block;opacity:.7}
+.wave-background::after{content:"";position:absolute;inset:0;background:linear-gradient(#070b0700 35%,#070b0726)}
+.secondary-page .freedom{position:relative;z-index:1}
+.secondary-page .header{background:#070b0740;backdrop-filter:blur(14px)}
+.secondary-page .footer{background:#070b0740}

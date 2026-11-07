@@ -1,0 +1,21 @@
+.auth-dialog{color-scheme:light;background:#fafcf7;color:#192412;border:1px solid #dce4d5;border-radius:28px;padding:44px;width:min(460px,calc(100% - 32px));max-height:calc(100svh - 32px);overflow:auto;box-shadow:0 30px 100px #0007;font:inherit}
+.auth-dialog::backdrop{background:#040a05ad;backdrop-filter:blur(12px)}
+.auth-close{position:absolute;top:12px;right:16px;font-size:28px;line-height:1;background:none;color:#69775f;padding:7px}
+.auth-intro{font-size:8px;letter-spacing:1.5px;color:#718366;margin-top:4px}
+.auth-dialog h2{font-size:31px;letter-spacing:-1px;font-weight:500;margin:18px 0 26px;line-height:1.15}
+.auth-tabs{display:flex;background:#eaf0e3;padding:4px;border-radius:30px;margin-bottom:26px}
+.auth-tabs button{flex:1;min-height:39px;border-radius:25px;background:none;color:#69775f;font-size:12px}
+.auth-tabs button[aria-pressed=true]{background:#fff;color:#253b18;box-shadow:0 2px 7px #304c1b0c}
+.auth-dialog label{display:block;font-size:11px;margin:18px 0 9px;font-weight:600}
+.auth-dialog input{width:100%;min-height:49px;padding:0 15px;border:1px solid #d6dfcc;border-radius:12px;background:#fff;color:#1c2815;font:inherit;font-size:13px;outline:none}
+.auth-dialog input:focus{border-color:#78a951;box-shadow:0 0 0 3px #a7dc6a28}
+.password-field{position:relative}.password-field input{padding-right:86px}.password-toggle{position:absolute;right:12px;top:0;height:100%;background:none;color:#62814b;font-size:10px;padding:0 5px}
+.auth-dialog .password-hint{font-size:10px;color:#6b7a61;margin:8px 0 0}
+.auth-message,.account-message{font-size:11px;line-height:1.6;color:#68795c;min-height:18px;margin:18px 0 10px}
+.auth-message.error,.account-message{color:#a33430}.auth-dialog .auth-submit{width:100%;min-height:50px;margin-top:4px;min-width:0}
+.auth-dialog .button-primary{background:#b6f34a;color:#20330d}.auth-dialog .button-primary:hover{background:#c9ff71}
+.auth-dialog button:disabled{opacity:.55;cursor:wait;transform:none}
+.auth-note{text-align:center;font-size:9px;color:#7b8871;margin:22px 0 0;line-height:1.7}
+.account-view p{font-size:12px;line-height:1.8;color:#718366}.account-view .account-email{font-size:17px;color:#233d17;overflow-wrap:anywhere;margin:8px 0 20px}.account-continue{width:100%;margin:14px 0}.account-logout{width:100%;background:none;color:#5c7150;min-height:44px}
+[hidden]{display:none!important}
+@media(max-width:760px){.auth-dialog{padding:36px 25px}.auth-dialog h2{font-size:28px}}

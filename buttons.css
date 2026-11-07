@@ -1,0 +1,79 @@
+/* Shared action buttons, adapted from the supplied Button component. */
+.freedom .button {
+  --button-ink:#f1f6eb;
+  position:relative;display:inline-flex;align-items:center;justify-content:center;
+  box-sizing:border-box;gap:8px;min-width:0;min-height:36px;height:36px;padding:8px 16px;
+  border:1px solid #b6f34a38;border-radius:8px;background:#17251080;
+  color:var(--button-ink);font-family:inherit;font-size:13px;font-weight:500;
+  line-height:1.2;letter-spacing:0;text-align:center;white-space:nowrap;
+  box-shadow:0 0 12px #b6f34a12,0 0 25px #b6f34a08;
+  transition:background-color .2s,color .2s,border-color .2s,box-shadow .2s,transform .2s;
+}
+.freedom .button-primary,.freedom .header-cta {
+  --button-ink:#20330d;background:#b6f34a;border-color:#c9ff77;
+  box-shadow:0 0 16px #b6f34a38,0 0 36px #b6f34a18,0 1px 2px #0001;
+}
+.freedom .button:hover {
+  color:var(--button-ink);background:#24391dcc;border-color:#b6f34a80;
+  box-shadow:0 0 18px #b6f34a36,0 0 36px #b6f34a18;transform:translateY(-1px);
+}
+.freedom .button-primary:hover,.freedom .header-cta:hover {
+  background:#c9ff71;border-color:#d8ff9a;
+  box-shadow:0 0 20px #b6f34a58,0 0 44px #b6f34a26;
+}
+.freedom .button:active {transform:translateY(0)}
+.freedom .button:focus-visible {outline:2px solid #b6f34ab3;outline-offset:3px}
+.freedom .button:disabled {
+  pointer-events:none;opacity:.5;cursor:not-allowed;transform:none;box-shadow:none;
+}
+.freedom .button svg {pointer-events:none;flex-shrink:0}
+.freedom .hero-actions .button,.freedom .auth-dialog .auth-submit,
+.freedom .account-continue,.freedom .account-logout,.freedom .team-page-bottom .button {
+  height:40px;min-height:40px;padding:8px 24px;
+}
+.freedom .header-cta,.freedom .login-button {min-width:0;font-size:12px}
+.freedom .login-button {background:transparent;border-color:transparent;box-shadow:none}
+.freedom .login-button:hover {background:#b6f34a0c;border-color:#b6f34a38;box-shadow:0 0 16px #b6f34a18}
+.freedom .auth-dialog .account-logout {
+  --button-ink:#4c663b;background:transparent;border-color:#b4c6a4;
+}
+.freedom .auth-dialog .account-logout:hover {background:#edf5e5}
+.freedom .button[data-loading="true"] {color:transparent;opacity:1;cursor:wait}
+.freedom .button[data-loading="true"]::after {
+  content:"";position:absolute;left:calc(50% - 8px);top:calc(50% - 8px);
+  width:16px;height:16px;box-sizing:border-box;border:2px solid var(--button-ink);
+  border-right-color:transparent;border-radius:50%;animation:button-spin .7s linear infinite;
+}
+@keyframes button-spin {to{transform:rotate(360deg)}}
+.freedom .segmented-control {border-radius:12px}
+.freedom .segmented-control .segment {
+  border-radius:8px;font-weight:500;text-align:center;
+  transition:background-color .2s,color .2s,box-shadow .2s;
+}
+.freedom .segmented-control .segment[aria-checked="true"] {
+  font-weight:500;box-shadow:0 0 14px #b6f34a32,0 0 28px #b6f34a14;
+}
+.freedom .segmented-control.segmented-vertical .segment {justify-content:center}
+.freedom .auth-tabs {border-radius:12px}
+.freedom .auth-tabs button {display:inline-flex;align-items:center;justify-content:center;border-radius:8px;font-weight:500}
+.freedom .auth-tabs button[aria-pressed="true"] {box-shadow:0 0 12px #91c95024,0 1px 3px #304c1b12}
+.freedom .language,.freedom .footer button,.freedom .password-toggle {
+  display:inline-flex;align-items:center;justify-content:center;border-radius:8px;font-weight:500;text-align:center;
+}
+.freedom .language,.freedom .footer button {padding:8px;min-height:32px}
+.freedom .language:hover,.freedom .footer button:hover {background:#b6f34a0c;box-shadow:0 0 14px #b6f34a20}
+.freedom .auth-close,.freedom .panel-close,.freedom .menu-button {border-radius:8px}
+.freedom .auth-close:hover,.freedom .panel-close:hover,.freedom .menu-button:hover {box-shadow:0 0 16px #b6f34a26}
+@media(min-width:761px) and (max-width:1000px) {
+  .freedom .header .brand-crop {transform:scale(.81);transform-origin:left center}
+}
+@media(max-width:760px) {
+  .freedom .header-actions {gap:8px}
+  .freedom .header-cta,.freedom .login-button {padding:8px 10px;font-size:11px}
+  .freedom .hero-actions .button {padding:8px 18px}
+  .freedom .mobile-menu>.button {display:flex;width:100%;margin-top:8px}
+}
+@media(prefers-reduced-motion:reduce) {
+  .freedom .button,.freedom .segmented-control .segment {transition:none}
+  .freedom .button[data-loading="true"]::after {animation:none}
+}
