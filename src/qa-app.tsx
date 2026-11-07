@@ -1,3 +1,4 @@
+import {EmployeeWorkspace} from './EmployeeWorkspace';
 import {useWorkforceAccess} from './workforce-client';
 import {ConversationOwner,WorkforceBulkPublish} from './ConversationOwner';
 import React,{useEffect,useRef,useState} from 'react';
@@ -108,5 +109,5 @@ function App({storageKey}:{storageKey:string|null}){
   </dialog>
  </div>;
 }
-function WorkspaceHost(){const access=useWorkforceAccess();if(access.loading)return <div className="wf-empty" role="status">Загружаем рабочее пространство…</div>;if(access.user&&!access.manager)return <div className="wf-empty"><h2>Мои разговоры и оценки</h2><p>В личном профиле доступны ваши разговоры, результаты проверок и апелляции.</p><a className="button button-primary" href="employees.html?mine=1">Открыть мой профиль</a></div>;return <App key={access.user?.id??'guest'} storageKey={access.user?null:STORE}/>;}
+function WorkspaceHost(){const access=useWorkforceAccess();if(access.loading)return <div className="wf-empty" role="status">Загружаем рабочее пространство…</div>;if(access.user&&!access.manager)return <EmployeeWorkspace key={access.user.id} userId={access.user.id} mode="review"/>;return <App key={access.user?.id??'guest'} storageKey={access.user?null:STORE}/>;}
 const root=document.querySelector('#qa-root');if(root)createRoot(root).render(<WorkspaceHost/>);

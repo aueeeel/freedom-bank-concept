@@ -21,4 +21,5 @@ assert.ok(worker.includes('Отправить апелляцию'));assert.ok(!w
 const manager=renderToStaticMarkup(<EmployeeReview {...callbacks} manager worker={false}/>);
 assert.ok(manager.includes('Рассмотреть апелляцию'));assert.ok(!manager.includes('Отправить апелляцию'));
 const empty=renderToStaticMarkup(<EmployeeWorkspaceView {...props} history={[]} count={0}/>);assert.ok(empty.includes('Рейтинг появится'));assert.ok(!empty.includes('Назад'));assert.ok(!empty.includes('Далее'));
-console.log('Employee workspace checks passed: personal controls, reviewer controls excluded, review details and appeal roles, empty history, interactive identity card.');
+const reviewMode=renderToStaticMarkup(<EmployeeWorkspaceView {...props} mode="review"/>);assert.ok(reviewMode.includes('Мои <em>диалоги.</em>'));assert.ok(reviewMode.includes('подать апелляцию'));assert.ok(!reviewMode.includes('МОИ РЕЗУЛЬТАТЫ'));assert.ok(reviewMode.includes('Мои разговоры'));assert.ok(reviewMode.includes('Мои апелляции'));
+console.log('Employee workspace checks passed: personal controls, reviewer controls excluded, review details and appeal roles, empty history, interactive identity card, review page mode.');

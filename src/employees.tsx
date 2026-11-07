@@ -14,9 +14,9 @@ function EmployeesPage(){
  const access=useWorkforceAccess(),[demo,setDemo]=useState(false),[demoRole,setDemoRole]=useState<'manager'|'worker'>('manager'),[badges,setBadges]=useState(false);
  const worker=!!access.user&&!access.manager;
  useEffect(()=>{
-  const checks=[...document.querySelectorAll<HTMLButtonElement>('.segment[data-panel="check"]')],links=[...document.querySelectorAll<HTMLElement>('.segment[data-panel="employees"]')];
+  const links=[...document.querySelectorAll<HTMLElement>('.segment[data-panel="employees"]')];
   document.body.dataset.workspaceRole=access.loading?'loading':worker?'employee':access.manager?'manager':'guest';
-  checks.forEach(button=>{button.hidden=access.loading||worker;});links.forEach(button=>{button.textContent=worker?'Мой кабинет':'Сотрудники';});
+  links.forEach(button=>{button.textContent=worker?'Мой кабинет':'Сотрудники';});
   document.title=worker?'Мой кабинет — Freedom Workspace':'Сотрудники — Freedom Bank';
  },[access.loading,access.manager,worker]);
  if(access.loading)return <div className="wf-page"><div className="wf-empty" role="status">Загружаем рабочий кабинет…</div></div>;
@@ -29,8 +29,11 @@ function EmployeesPage(){
 }
 
 function Workspace({manager,userId,workerId,demo}:{manager:boolean;userId?:string;workerId:string|null;demo:boolean}){
- const [seed]=useState(()=>workforceDemo()),[demoReviews,setDemoReviews]=useState(seed.reviews),[people,setPeople]=useState<Employee[]>([]),[ratings,setRatings]=useState<EmployeeRating[]>([]),[appeals,setAppeals]=useState<EmployeeAppeal[]>([]),[selection,setSelection]=useState<string|null>(null),[review,setReview]=useState<SavedReview|null>(null),[history,setHistory]=useState<ReviewSummary[]>([]),[count,setCount]=useState(0),[page,setPage]=useState(0),[tab,setTab]=useState<'people'|'appeals'>('people'),[loading,setLoading]=useState(true),[busy,setBusy]=useState(false),[notice,setNotice]=useState(''),[refresh,setRefresh]=useState(0),[query,setQuery]=useState(''),[creating,setCreating]=useState(false),[name,setName]=useState(''),[aliases,setAliases]=useState(''),[email,setEmail]=useState('');
+ const [seed]=useState(()=>workforceDemo()),[demoReviews,setDemoReviews]=useState(seed.reviews),[people,setPeople]=useState<Employee[]>([]),[ratings,setRatings]=useState<EmployeeRating[]>([]),[appeals,setAppeals]=useState<EmployeeAppeal[]>([]),[selection,setSelection]=useState<string|null>(null),[review,setReview]=useState<SavedReview|null>(null),[history,setHistory]=useState<ReviewSummary[]>([]),[count,setCount]=useState(0),[page,setPage]=useState(0),[tab,setTab]=useState<'people'|'appeals'>(()=>manager&&new URL(location.href).searchParams.get('tab')==='appeals'?'appeals':'people'),[loading,setLoading]=useState(true),[busy,setBusy]=useState(false),[notice,setNotice]=useState(''),[refresh,setRefresh]=useState(0),[query,setQuery]=useState(''),[creating,setCreating]=useState(false),[name,setName]=useState(''),[aliases,setAliases]=useState(''),[email,setEmail]=useState('');
  useEffect(()=>{setSelection(null);setReview(null);setPage(0);},[manager,workerId]);
+ // Вкладка «Апелляции» руководителя связана с кнопкой «Апелляции» в верхней навигации.
+ useEffect(()=>{if(!manager||demo)return;const url=new URL(location.href);if(tab==='appeals')url.searchParams.set('tab','appeals');else url.searchParams.delete('tab');window.history.replaceState(null,'',url);
+  for(const [panel,on] of [['employees',tab!=='appeals'],['app',tab==='appeals']] as const)document.querySelectorAll<HTMLElement>(`.segment[data-panel="${panel}"]`).forEach(b=>{b.setAttribute('aria-checked',String(on));b.tabIndex=on?0:-1;});},[tab,manager,demo]);
  const demoPeople=useMemo(()=>manager?seed.people:seed.people.filter(p=>p.id===workerId),[manager,seed,workerId]);
  useEffect(()=>{let alive=true;setLoading(true);if(demo){setPeople(demoPeople);setRatings(demoPeople.map(p=>{const s=employeeStats(demoReviews,p.id);return{id:p.id,name:p.name,user_id:p.user_id,review_count:s.count,rated_count:s.rated,average_score:s.average,stars:s.stars,open_appeals:0};}));setLoading(false);return;}setAppeals([]);Promise.all([listEmployees(),listRatings(),listAppeals()]).then(([p,r,a])=>{if(alive){setPeople(p);setRatings(r);setAppeals(a);}}).catch(e=>alive&&setNotice(e.message)).finally(()=>alive&&setLoading(false));return()=>{alive=false;};},[demo,demoPeople,demoReviews,refresh]);
  useEffect(()=>{const id=new URL(location.href).searchParams.get('employee');if(!selection&&id&&people.some(p=>p.id===id))setSelection(id);else if(!selection&&!manager&&people.length===1)setSelection(people[0].id);},[people,selection,manager]);

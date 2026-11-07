@@ -12,6 +12,6 @@ html=html.replace('<title>Freedom Bank — Свобода быть собой</t
   .replace('class="brand" href="#"','class="brand" href="/"')
   .replace(/  <section class="hero"[\s\S]*?  <\/section>/,'  <section id="employees-root" class="team-content" aria-label="Сотрудники"><noscript><h1>Наша команда</h1><p>Для просмотра интерактивных бейджей нужен JavaScript.</p></noscript></section>')
   .replaceAll('aria-checked="true" tabindex="0" data-panel="card"','aria-checked="false" tabindex="-1" data-panel="card" data-page-route="/"')
-  .replaceAll('aria-checked="false" tabindex="-1" data-panel="employees" data-page-route="employees.html"','aria-checked="true" tabindex="0" data-panel="employees"')
-  .replaceAll('data-panel="check" data-page-route="check.html"','data-panel="check" data-page-route="check.html" hidden');
+  // «Проверка» видна на всех страницах; «Сотрудники» ведёт на список, чтобы уйти со вкладки «Апелляции».
+  .replaceAll('aria-checked="false" tabindex="-1" data-panel="employees" data-page-route="employees.html"','aria-checked="true" tabindex="0" data-panel="employees" data-page-route="employees.html"');
 fs.writeFileSync(path.join(root,'employees.html'),html);
