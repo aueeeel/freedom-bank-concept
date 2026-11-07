@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import {initialChecklist,blankEvaluation,demoConversation,score,finalValue,validateChecklist,validRating} from '../src/qa-model';
-import {normalizeRecords,parseText,readConversationFile,audioTime} from '../src/qa-files';
+import {normalizeRecords,parseText,readConversationFile,audioTime,mergeConversations} from '../src/qa-files';
 
 const demo=demoConversation();assert.equal(score(initialChecklist,demo.evaluations).total,85.38);
 const full=Object.fromEntries(initialChecklist.map(c=>[c.id,{...blankEvaluation(),value:c.type==='scale'?Math.max(...c.scale):c.type==='flag'?'no':'yes'}]));
@@ -21,5 +21,7 @@ const sub=parseText('1\n00:00:02,200 --> 00:00:04,500\nOperator: Hello\n\n2\n00:
 const iso=normalizeRecords({transcript:[{timestamp:'2026-11-07T10:00:00+05:00',speaker:'operator',text:'A'},{timestamp:'2026-11-07T10:00:08+05:00',speaker:'client',text:'B'}]})[0].transcript;assert.equal(audioTime(iso[1],iso),8);
 const csv=await readConversationFile(new File(['timestamp,speaker,text\n00:01,operator,"Hello, client"\n00:02,client,"First line\nSecond line"'], 'sample.csv'));
 assert.equal(csv[0].transcript[0].text,'Hello, client');assert.equal(csv[0].transcript[1].text,'First line\nSecond line');
+{const split=normalizeRecords({records:[{conversation_id:'one',transcript:[{timestamp:'00:00',speaker:'bot',text:'Я бот'},{timestamp:'00:10',speaker:'client',text:'Оператора'}]},{conversation_id:'one',transcript:[{timestamp:'00:30',speaker:'operator',text:'Здравствуйте, я Алия'}]},{conversation_id:'two',transcript:[{speaker:'client',text:'Другой чат'}]}]});assert.equal(split.length,2);assert.deepEqual(split[0].transcript.map(t=>t.speaker),['bot','client','operator']);
+const [bot]=normalizeRecords({transcript:[{timestamp:'00:00',speaker:'bot',text:'a'},{timestamp:'01:00',speaker:'bot',text:'c'}]}),[op]=normalizeRecords({transcript:[{timestamp:'00:30',speaker:'operator',text:'b'}]});assert.deepEqual(mergeConversations([bot,op]).transcript.map(t=>t.text),['a','b','c']);}
 await assert.rejects(()=>readConversationFile(new File(['{oops'], 'bad.json')));
-console.log('CQA checks passed: weighting, N/A, gross flags, appeals, checklist validation, dataset, text, SRT, ISO times, CSV, invalid files.');
+console.log('CQA checks passed: weighting, N/A, gross flags, appeals, checklist validation, dataset, text, SRT, ISO times, CSV, invalid files, one chat stays one.');

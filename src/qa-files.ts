@@ -10,7 +10,27 @@ export function normalizeRecords(raw:any,name='Загруженный диало
  const data=raw?.data?.records??raw?.records??raw?.conversation??raw;
  const list=Array.isArray(data)?(data.length&&((data[0]?.speaker!==undefined)||(data[0]?.role!==undefined)||typeof data[0]==='string')?[{transcript:data}]:data):[data];
  if(!list.length||list.length>1000)throw Error('В файле должно быть от 1 до 1000 диалогов.');
- return list.map((r:any,i:number)=>{if(!r||!Array.isArray(r.transcript??r.messages))throw Error('Не найден transcript. Загрузите запись или объект data.records в формате датасета.');const c=newConversation(String(r.name??r.conversation_id??`${name}${list.length>1?' · '+(i+1):''}`).slice(0,160),turns(r.transcript??r.messages),String(r.language??'Не указан'));c.sourceId=r.conversation_id?String(r.conversation_id).slice(0,160):undefined;c.channel=String(r.channel??'agent chat');c.audioUrl=safeAudio(r.audio_url);return c;});
+ const parsed=list.map((r:any,i:number)=>{if(!r||!Array.isArray(r.transcript??r.messages))throw Error('Не найден transcript. Загрузите запись или объект data.records в формате датасета.');const c=newConversation(String(r.name??r.conversation_id??`${name}${list.length>1?' · '+(i+1):''}`).slice(0,160),turns(r.transcript??r.messages),String(r.language??'Не указан'));c.sourceId=r.conversation_id?String(r.conversation_id).slice(0,160):undefined;c.channel=String(r.channel??'agent chat');c.audioUrl=safeAudio(r.audio_url);return c;});
+ // Части одного чата (например, бот и оператор) с общим conversation_id собираются в один диалог.
+ const groups=new Map<string,Conversation[]>(),out:Conversation[]=[];
+ for(const c of parsed){if(!c.sourceId){out.push(c);continue;}const g=groups.get(c.sourceId);if(g)g.push(c);else{const fresh=[c];groups.set(c.sourceId,fresh);out.push(c);}}
+ return out.map(c=>{const g=c.sourceId?groups.get(c.sourceId)!:[c];return g.length>1?mergeConversations(g):c;});
+}
+/** Склеивает несколько частей одного разговора в один диалог, сохраняя хронологию. */
+export function mergeConversations(parts:Conversation[]):Conversation{
+ if(parts.length===1)return parts[0];
+ const all=parts.flatMap((p,part)=>p.transcript.map((t,i)=>({t,part,i,at:timestampSeconds(t.timestamp)})));
+ const iso=all.map(x=>/^\d{4}-/.test(x.t.timestamp));
+ const sortable=all.length>0&&all.every(x=>x.at!==null)&&(iso.every(Boolean)||!iso.some(Boolean));
+ if(sortable)all.sort((a,b)=>a.at!-b.at!||a.part-b.part||a.i-b.i);
+ const transcript=all.map(x=>x.t);
+ const first=parts.find(p=>p.transcript.length)??parts[0];
+ const audio=parts.find(p=>p.audioUrl);
+ const c=newConversation(first.name,transcript,parts.find(p=>p.language&&p.language!=='Не указан')?.language??first.language);
+ c.sourceId=parts.find(p=>p.sourceId)?.sourceId;
+ c.channel=audio?.audioName?'voice call':first.channel;
+ if(audio){c.audioUrl=audio.audioUrl;c.audioName=audio.audioName;}
+ return c;
 }
 export function parseText(text:string):Turn[]{
  const lines=text.replace(/^\uFEFF/,'').split(/\r?\n/),out:Turn[]=[];
