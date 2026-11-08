@@ -1,0 +1,133 @@
+{
+  "team_name": "жи-ши пишется через",
+  "official_weights": [
+    10,
+    15,
+    20,
+    20,
+    15,
+    15,
+    5,
+    0
+  ],
+  "prod": {
+    "records": 10,
+    "ok": 10,
+    "errors": 0,
+    "unique_ids": true,
+    "all_evidence_indices_valid": true,
+    "scores_recomputed": true
+  },
+  "local_model_completed": 8,
+  "local_model_errors": 2,
+  "final_decisions": "All 10 independently reviewed by Codex assistant. Two incomplete local JSON responses retained as processing errors in audit, not mislabeled successful local inference.",
+  "items": [
+    {
+      "conversation_id": "p2-ru-001",
+      "final_source": "Codex assistant review using original checklist",
+      "local_model_status": "error",
+      "local_model_score": null,
+      "local_model_error": "Локальная модель не завершила JSON; оценка не публикуется",
+      "reference_score": 92.31,
+      "review_notes": [
+        "Консультация 15: раздел отчёта трактуется как второстепенная деталь после решения основного вопроса о веб-кабинете."
+      ]
+    },
+    {
+      "conversation_id": "p2-ru-002",
+      "final_source": "Codex assistant review using original checklist",
+      "local_model_status": "evaluated",
+      "local_model_score": 38.75,
+      "local_model_error": null,
+      "reference_score": 40.0,
+      "review_notes": []
+    },
+    {
+      "conversation_id": "p2-ru-003",
+      "final_source": "Codex assistant review using original checklist",
+      "local_model_status": "evaluated",
+      "local_model_score": 62.31,
+      "local_model_error": null,
+      "reference_score": 100.0,
+      "review_notes": []
+    },
+    {
+      "conversation_id": "p2-ru-004",
+      "final_source": "Codex assistant review using original checklist",
+      "local_model_status": "evaluated",
+      "local_model_score": 26.0,
+      "local_model_error": null,
+      "reference_score": 11.0,
+      "review_notes": [
+        "Содержание реального ограничения нельзя независимо подтвердить по транскрипту; флаг относится к раскрытию оператором индивидуального статуса без проверки."
+      ]
+    },
+    {
+      "conversation_id": "p2-kz-001",
+      "final_source": "Codex assistant review using original checklist",
+      "local_model_status": "evaluated",
+      "local_model_score": 75.63,
+      "local_model_error": null,
+      "reference_score": 94.38,
+      "review_notes": [
+        "Пограничный 06: если событие «Оператор начал проверку» считается видимым клиенту предупреждением, допустимо 10. Предпочтение 7 следует буквальному требованию предупреждения оператором."
+      ]
+    },
+    {
+      "conversation_id": "p2-kz-002",
+      "final_source": "Codex assistant review using original checklist",
+      "local_model_status": "evaluated",
+      "local_model_score": 7.5,
+      "local_model_error": null,
+      "reference_score": 12.5,
+      "review_notes": [
+        "Пограничный 06: 0 за фундаментальное противоречие статусов; 4 возможны при трактовке как единичного непонятного ответа."
+      ]
+    },
+    {
+      "conversation_id": "p2-kz-003",
+      "final_source": "Codex assistant review using original checklist",
+      "local_model_status": "evaluated",
+      "local_model_score": 44.38,
+      "local_model_error": null,
+      "reference_score": 93.08,
+      "review_notes": [
+        "Грубый флаг не обнуляет итог. 05 и 06 допускают отдельное экспертное обсуждение: незаконность предложения нельзя автоматически превратить в низкую оценку каждого другого критерия."
+      ]
+    },
+    {
+      "conversation_id": "p2-kz-004",
+      "final_source": "Codex assistant review using original checklist",
+      "local_model_status": "evaluated",
+      "local_model_score": 66.67,
+      "local_model_error": null,
+      "reference_score": 100.0,
+      "review_notes": []
+    },
+    {
+      "conversation_id": "p2-en-001",
+      "final_source": "Codex assistant review using original checklist",
+      "local_model_status": "error",
+      "local_model_score": null,
+      "local_model_error": "Локальная модель не завершила JSON; оценка не публикуется",
+      "reference_score": 94.38,
+      "review_notes": []
+    },
+    {
+      "conversation_id": "p2-en-002",
+      "final_source": "Codex assistant review using original checklist",
+      "local_model_status": "evaluated",
+      "local_model_score": 76.92,
+      "local_model_error": null,
+      "reference_score": 100.0,
+      "review_notes": []
+    }
+  ],
+  "swap_evaluated": false,
+  "dev": {
+    "records": 65,
+    "ok": 7,
+    "errors": 58,
+    "publication_of_errors_confirmed_by_user": true
+  }
+}
