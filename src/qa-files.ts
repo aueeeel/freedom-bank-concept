@@ -1,11 +1,23 @@
 import {newConversation,uid,type Conversation,type Speaker,type Turn} from './qa-model';
 export const ACCEPT='.json,.txt,.csv,.srt,.vtt,.pdf,.mp3,.wav,.m4a,.ogg,.webm,.aac,.flac';
 export const MAX_BYTES=20*1024*1024;
-export type ImportMode='single'|'batch';
+export type ImportMode='auto'|'single'|'batch';
 export function isAudio(name:string){return /\.(mp3|wav|m4a|ogg|webm|aac|flac)$/i.test(name);}
 export function role(value:unknown):Speaker{const s=String(value??'').trim().toLowerCase();if(/^(operator|agent|оператор|сотрудник|қызметкер|support)$/.test(s))return'operator';if(/^(client|customer|клиент|клиентка|user|пользователь)$/.test(s))return'client';if(/^(bot|бот|assistant)$/.test(s))return'bot';if(/^(system|система|системное сообщение)$/.test(s))return'system';return'unknown';}
 function safeAudio(raw:unknown){if(typeof raw!=='string'||!raw.trim())return undefined;try{const u=new URL(raw);return ['https:','http:'].includes(u.protocol)?u.href:undefined;}catch{return undefined;}}
-function turns(raw:unknown):Turn[]{if(!Array.isArray(raw))throw Error('Поле transcript должно быть массивом реплик.');if(raw.length>5000)throw Error('В одном диалоге поддерживается до 5000 реплик.');return raw.map((item:any)=>{const text=typeof item==='string'?item:item?.text??item?.content;if(typeof text!=='string')throw Error('У каждой реплики должно быть текстовое поле text.');return{id:uid(),timestamp:String(item?.timestamp??item?.time??item?.start??''),speaker:role(item?.speaker??item?.role),originalSpeaker:String(item?.speaker??item?.role??''),text};});}
+function turns(raw:unknown):Turn[]{
+ if(!Array.isArray(raw))throw Error('Поле transcript должно быть массивом реплик.');
+ if(raw.length>5000)throw Error('В одном диалоге поддерживается до 5000 реплик.');
+ const seen=new Set<string>();
+ return raw.map((item:any,index)=>{
+  const text=typeof item==='string'?item:item?.text??item?.content;
+  if(typeof text!=='string')throw Error('У каждой реплики должно быть текстовое поле text.');
+  const original=item?.message_id??item?.id;
+  const id=typeof original==='string'&&original.trim()&&original.length<=160?original:'m'+String(index).padStart(5,'0');
+  if(seen.has(id))throw Error('В диалоге повторяется ID реплики: '+id);seen.add(id);
+  return{id,timestamp:String(item?.timestamp??item?.time??item?.start??''),speaker:role(item?.speaker??item?.role),originalSpeaker:String(item?.speaker??item?.role??''),text};
+ });
+}
 export function normalizeRecords(raw:any,name='Загруженный диалог'):Conversation[]{
  if(raw?.isSuccess===false)throw Error(String(raw.error||'Набор данных содержит ошибку.'));
  const data=raw?.data?.records??raw?.records??raw?.conversation??raw;
@@ -19,7 +31,7 @@ export function normalizeRecords(raw:any,name='Загруженный диало
 }
 export function importedConversations(parts:Conversation[],name:string,mode:ImportMode='single'):Conversation[]{
  if(parts.some(part=>part.transcript.length>5000)||mode==='single'&&parts.reduce((n,part)=>n+part.transcript.length,0)>5000)throw Error('В одном диалоге поддерживается до 5000 реплик. Для независимых чатов выберите «Набор диалогов».');
- if(mode==='batch'||parts.length<=1)return parts;
+ if(mode==='batch'||mode==='auto'||parts.length<=1)return parts;
  const audioURLs=[...new Set(parts.map(part=>part.audioUrl).filter(Boolean))];if(audioURLs.length>1)throw Error('В файле несколько аудиозаписей. Выберите «Набор диалогов».');
  const combined=mergeConversations(parts);combined.name=name.slice(0,160);
  const ids=[...new Set(parts.map(part=>part.sourceId).filter(Boolean))];combined.sourceId=ids.length===1?ids[0]:undefined;
@@ -32,7 +44,8 @@ export function mergeConversations(parts:Conversation[]):Conversation{
  const iso=all.map(x=>/^\d{4}-/.test(x.t.timestamp));
  const sortable=all.length>0&&all.every(x=>x.at!==null)&&(iso.every(Boolean)||!iso.some(Boolean));
  if(sortable)all.sort((a,b)=>a.at!-b.at!||a.part-b.part||a.i-b.i);
- const transcript=all.map(x=>x.t);
+ const duplicateIds=new Set(all.map(x=>x.t.id)).size!==all.length;
+ const transcript=all.map((x,i)=>duplicateIds?{...x.t,id:'m'+String(i).padStart(5,'0')}:x.t);
  const first=parts.find(p=>p.transcript.length)??parts[0];
  const audio=parts.find(p=>p.audioUrl);
  const c=newConversation(first.name,transcript,parts.find(p=>p.language&&p.language!=='Не указан')?.language??first.language);
@@ -50,7 +63,7 @@ export function parseText(text:string):Turn[]{
   else if(out.length)out[out.length-1].text+=(out[out.length-1].text?'\n':'')+line;
   else out.push({id:uid(),timestamp:'',speaker:'unknown',text:line});
  }
- return out.filter(t=>t.text.trim());
+ return out.filter(t=>t.text.trim()).map((t,i)=>({...t,id:'m'+String(i).padStart(5,'0')}));
 }
 function csv(text:string){const rows:string[][]=[];let row:string[]=[],cell='',quoted=false;for(let i=0;i<text.length;i++){const ch=text[i];if(ch==='"'){if(quoted&&text[i+1]==='"'){cell+='"';i++;}else quoted=!quoted;}else if(ch===','&&!quoted){row.push(cell);cell='';}else if((ch==='\n'||ch==='\r')&&!quoted){if(ch==='\r'&&text[i+1]==='\n')i++;row.push(cell);if(row.some(c=>c.trim()))rows.push(row);row=[];cell='';}else cell+=ch;}if(quoted)throw Error('В CSV не закрыта кавычка.');row.push(cell);if(row.some(c=>c.trim()))rows.push(row);const headers=rows.shift()?.map(h=>h.trim().toLowerCase().replace(/^\uFEFF/,''))??[];if(!headers.includes('text')||!headers.includes('speaker'))throw Error('В CSV нужны колонки timestamp,speaker,text.');return rows.map(r=>Object.fromEntries(headers.map((h,i)=>[h,r[i]??''])));}
 export async function readConversationFile(file:File,mode:ImportMode='single'):Promise<Conversation[]>{

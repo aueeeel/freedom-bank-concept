@@ -1,8 +1,20 @@
 import assert from 'node:assert/strict';
 import {initialChecklist,blankEvaluation,demoConversation,score,finalValue,validateChecklist,validRating} from '../src/qa-model';
 import {normalizeRecords,parseText,readConversationFile,audioTime,mergeConversations,splitSections} from '../src/qa-files';
+import {uploadedConversations,fileRows,analyseFile} from '../src/qa-file-batch';
 
 const demo=demoConversation();assert.equal(score(initialChecklist,demo.evaluations).total,85.38);
+const batchTen=normalizeRecords({data:{records:Array.from({length:10},(_,i)=>({conversation_id:`batch-${i+1}`,language:'RU',channel:'agent chat',transcript:[{speaker:'client',timestamp:'00:00',text:`Вопрос ${i+1}`},{speaker:'operator',timestamp:'00:01',text:`Ответ ${i+1}`}]}))}});
+assert.equal(batchTen.length,10);
+assert.equal(fileRows(batchTen,initialChecklist).length,10);
+assert.equal(fileRows(batchTen,initialChecklist)[9].name,'batch-10');
+assert.equal(uploadedConversations([demo,...batchTen],batchTen.map(c=>c.id)).length,10);
+const batchCalls:string[]=[],batchResults:string[]=[];
+const batchOutcome=await analyseFile(batchTen,new AbortController().signal,async c=>{batchCalls.push(c.sourceId!);if(c.sourceId==='batch-4')throw Error('TEST ONLY: unavailable');return demo.evaluations;},c=>batchResults.push(c.sourceId!),()=>{});
+assert.equal(batchCalls.length,10);assert.equal(batchResults.length,9);assert.equal(batchResults[8],'batch-10');assert.equal(batchOutcome.errors[0].name,'batch-4');
+const batchStop=new AbortController();let stoppedCalls=0;
+const stoppedOutcome=await analyseFile(batchTen,batchStop.signal,async()=>{stoppedCalls++;return demo.evaluations;},()=>{if(stoppedCalls===3)batchStop.abort();},()=>{});
+assert.equal(stoppedCalls,3);assert.equal(stoppedOutcome.cancelled,true);
 const full=Object.fromEntries(initialChecklist.map(c=>[c.id,{...blankEvaluation(),value:c.type==='scale'?Math.max(...c.scale):c.type==='flag'?'no':'yes'}]));
 assert.equal(score(initialChecklist,full).total,100);
 full.management.value=0;assert.equal(score(initialChecklist,full).total,85); // 10-point scale is weighted at 15.

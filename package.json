@@ -4,13 +4,15 @@
   "version": "1.0.0",
   "scripts": {
     "dev": "node server.cjs",
-    "check": "node --check app.js && node --check media.js && node --check segmented-navbar.js && node --check server.cjs && node --check auth-client.js && node --check employees.js && node --check wave-background.js && node --check qa.js && node --check invite-client.js && node --check invite.js && node --check cqa-local-model.cjs",
-    "build": "node scripts/build.cjs",
-    "test": "node scripts/test-qa.cjs && node scripts/test-workforce.cjs && node scripts/test-invitations.cjs && node scripts/test-employee-workspace.cjs && node scripts/test-local-model.cjs",
+    "check": "node scripts/check.cjs",
+    "build": "node scripts/prepare-cloud-checklist.cjs && node scripts/build.cjs",
+    "test": "node scripts/test-qa.cjs && node scripts/test-workforce.cjs && node scripts/test-invitations.cjs && node scripts/test-employee-workspace.cjs && npm run test:cloud && node scripts/test-local-model.cjs",
+    "test:cloud": "node scripts/test-cloud.mjs && node scripts/test-cloud-client.cjs",
     "dev:model": "node -e \"process.env.CQA_MODEL_URL=process.env.CQA_MODEL_URL||'http://127.0.0.1:8080';require('./server.cjs')\""
   },
   "dependencies": {
     "@supabase/supabase-js": "2.119.0",
+    "@vercel/blob": "2.8.2",
     "pdfjs-dist": "6.5.438",
     "react": "19.3.1",
     "react-dom": "19.3.1"
@@ -19,5 +21,8 @@
     "@tailwindcss/cli": "4.3.5",
     "esbuild": "0.28.2",
     "tailwindcss": "4.3.5"
+  },
+  "overrides": {
+    "zod": "4.6.6"
   }
 }

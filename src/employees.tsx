@@ -9,10 +9,10 @@ import {Stars,dateLabel,scoreLabel,sourceLabel} from './workforce-ui';
 import {canonicalName,employeeStats,workforceDemo,type Employee,type EmployeeRating,type SavedReview,type ReviewSummary,type EmployeeAppeal} from './workforce-model';
 import {useWorkforceAccess,listEmployees,listRatings,createEmployee,inviteEmployee,listReviews,getReview,listAppeals,submitAppeal,resolveAppeal} from './workforce-client';
 import {score,uid,type Rating,type Conversation} from './qa-model';
-import {available,requestAnalysis} from './qa-service';
+import {available,requestAnalysis} from './qa-cloud-service';
 import type {AiOpinion} from './EmployeeReview';
 // Повторная оценка сохранённого разговора моделью — подсказка проверяющему при разборе апелляции.
-async function askModel(review:SavedReview,criterionId:string):Promise<AiOpinion>{const c={id:review.id,sourceId:review.source_id,name:review.name,language:review.language,channel:review.channel,transcript:review.transcript,evaluations:{},events:[]} as Conversation;const result=await requestAnalysis(c,review.checklist,AbortSignal.timeout(300000));const e=result[criterionId];if(!e)throw Error('ИИ не оценил этот критерий.');return{value:e.value,reason:e.reason};}
+async function askModel(review:SavedReview,criterionId:string):Promise<AiOpinion>{const c={id:review.id,sourceId:review.source_id,targetRole:'operator',name:review.name,language:review.language,channel:review.channel,transcript:review.transcript,evaluations:{},events:[]} as Conversation;const result=await requestAnalysis(c,review.checklist,AbortSignal.timeout(4*3600000));const e=result[criterionId];if(!e)throw Error('ИИ не оценил этот критерий.');return{value:e.value,reason:e.reason};}
 
 function EmployeesPage(){
  const access=useWorkforceAccess(),[demo,setDemo]=useState(false),[demoRole,setDemoRole]=useState<'manager'|'worker'>('manager'),[badges,setBadges]=useState(false);
