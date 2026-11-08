@@ -30,10 +30,11 @@ checker/local-models/
 checker/config/*.local.json
 local-ui/dist/
 local-ui/logs/
-swap/swap_dialogues.json
 swap/results.swap.json
 swap/evaluations/
 swap/cache/
 *.sqlite3
 *.sqlite3-wal
 *.sqlite3-shm
+
+checker/config/learned_examples.json

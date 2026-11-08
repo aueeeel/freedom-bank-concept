@@ -3,14 +3,15 @@
   "private": true,
   "version": "1.0.0",
   "scripts": {
-    "dev": "node server.cjs",
+    "dev": "powershell -NoProfile -ExecutionPolicy Bypass -File ./Start-CQA.ps1 -NoBrowser",
     "check": "node scripts/check.cjs",
     "build": "node scripts/prepare-cloud-checklist.cjs && node scripts/build.cjs",
     "test": "node scripts/test-qa.cjs && node scripts/test-workforce.cjs && node scripts/test-invitations.cjs && node scripts/test-employee-workspace.cjs && npm run test:cloud && node scripts/test-local-model.cjs && node scripts/test-coach.cjs && node scripts/test-coach-server.mjs && node scripts/test-transcribe.mjs",
     "test:cloud": "node scripts/test-cloud.mjs && node scripts/test-cloud-client.cjs",
     "dev:model": "node -e \"process.env.CQA_MODEL_URL=process.env.CQA_MODEL_URL||'http://127.0.0.1:8080';require('./server.cjs')\"",
     "local:build": "npm run build && node scripts/build-local.cjs",
-    "local": "powershell -NoProfile -ExecutionPolicy Bypass -File ./Start-CQA.ps1"
+    "local": "powershell -NoProfile -ExecutionPolicy Bypass -File ./Start-CQA.ps1",
+    "dev:cloud": "node server.cjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.119.0",

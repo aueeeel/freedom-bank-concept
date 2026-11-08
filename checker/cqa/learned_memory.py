@@ -1,5 +1,6 @@
 """A locally trained TF-IDF retriever; it retrieves examples, never assigns grades."""
 import math
+import gzip,json
 import re
 from collections import Counter
 from functools import lru_cache
@@ -22,10 +23,12 @@ def scene_text(conversation):
 
 @lru_cache(maxsize=3)
 def _load(stamp):
-    return read_json(PATH)
+    if PATH.exists():return read_json(PATH)
+    with gzip.open(PATH.with_suffix('.json.gz'),'rt',encoding='utf-8') as stream:return json.load(stream)
 
 def load_memory():
-    return _load(PATH.stat().st_mtime_ns) if PATH.exists() else None
+    source=PATH if PATH.exists() else PATH.with_suffix('.json.gz')
+    return _load(source.stat().st_mtime_ns) if source.exists() else None
 
 def memory_identity():
     data=load_memory()
