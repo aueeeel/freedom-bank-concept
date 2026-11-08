@@ -2,10 +2,20 @@ import assert from 'node:assert/strict';
 import {actorCases} from '../src/qa-roles';
 import {newConversation,initialChecklist} from '../src/qa-model';
 import {analyseFile,fileRows} from '../src/qa-file-batch';
-import {requestAnalysis,requestAppeal} from '../src/qa-cloud-service';
+import {requestAnalysis,requestAppeal,analysisId} from '../src/qa-cloud-service';
+import {readConversationFile,normalizeRecords} from '../src/qa-files';
 const turns=[{id:'client-1',timestamp:'00:00',speaker:'client' as const,text:'Нужен оператор.'},
  {id:'bot-1',timestamp:'00:01',speaker:'bot' as const,text:'Подключаю оператора.'},
  {id:'operator-1',timestamp:'00:02',speaker:'operator' as const,text:'Здравствуйте! Я Анна.'}];
+const dataset={records:Array.from({length:10},(_,i)=>({conversation_id:'auto-'+i,transcript:turns.map(t=>({message_id:t.id,timestamp:t.timestamp,speaker:t.speaker,text:t.text}))}))};
+const imported=await readConversationFile(new File([JSON.stringify(dataset)],'ten.json'),'auto');
+assert.equal(imported.length,10);assert.equal(imported.flatMap(actorCases).length,20);
+assert.deepEqual(imported[0].transcript.map(t=>t.id),turns.map(t=>t.id));
+const repeated=await readConversationFile(new File([JSON.stringify(dataset)],'ten.json'),'auto');
+assert.deepEqual(repeated[0].transcript,imported[0].transcript);
+const withoutId=normalizeRecords({transcript:turns})[0],again=normalizeRecords({transcript:turns})[0];
+assert.notEqual(withoutId.id,again.id);assert.equal(await analysisId(withoutId),await analysisId(again));
+assert.throws(()=>normalizeRecords({transcript:[{message_id:'same',speaker:'bot',text:'a'},{message_id:'same',speaker:'bot',text:'b'}]}),/повторяется ID/);
 const cards=Array.from({length:10},(_,i)=>({...newConversation('Диалог '+i,turns),sourceId:'file-'+i})).flatMap(actorCases);
 assert.equal(cards.length,20);assert.equal(new Set(cards.map(c=>c.id)).size,20);
 assert.equal(cards.filter(c=>c.targetRole==='bot').length,10);assert.equal(cards.filter(c=>c.targetRole==='operator').length,10);

@@ -5,7 +5,7 @@ export function uploadedConversations(cases:Conversation[],ids:readonly string[]
  return ids.flatMap(id=>{const c=byId.get(id);return c?[c]:[];});
 }
 export function fileRows(cases:Conversation[],checklist:Criterion[]){
- return cases.map(c=>({id:c.id,name:(c.sourceId??c.name)+(c.targetRole?' · '+(c.targetRole==='bot'?'Бот':'Оператор'):''),total:score(checklist,c.evaluations).total,
+ return cases.map(c=>({id:c.id,name:c.sourceId?c.sourceId+(c.targetRole?' · '+(c.targetRole==='bot'?'Бот':'Оператор'):''):c.name,total:score(checklist,c.evaluations).total,
   origin:c.reviewSource==='ai'?'ИИ':score(checklist,c.evaluations).complete?'Ручная оценка':'Не оценён'}));
 }
 export async function analyseFile(cases:Conversation[],signal:AbortSignal,

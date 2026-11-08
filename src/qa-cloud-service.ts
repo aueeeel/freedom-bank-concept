@@ -9,10 +9,16 @@ const pause=(ms:number,signal:AbortSignal)=>new Promise<void>((resolve,reject)=>
  const timer=setTimeout(()=>{signal.removeEventListener('abort',stop);resolve();},ms);signal.addEventListener('abort',stop,{once:true});
 });
 async function authHeaders(){const client=window.FreedomAuth?.getClient?.();const session=client?await client.auth.getSession():null;const token=session?.data.session?.access_token;if(!token)throw Error('Войдите в аккаунт менеджера для автоматической проверки.');return{'Content-Type':'application/json',Authorization:'Bearer '+token};}
+export async function analysisId(c:Conversation){
+ if(c.sourceId)return c.sourceId;
+ const bytes=new TextEncoder().encode(JSON.stringify([c.language,c.channel,c.transcript.map(t=>[t.timestamp,t.speaker,t.text])]));
+ const hash=await crypto.subtle.digest('SHA-256',bytes);
+ return 'upload-'+Array.from(new Uint8Array(hash),b=>b.toString(16).padStart(2,'0')).join('').slice(0,24);
+}
 export async function requestAnalysis(conversation:Conversation,checklist:Criterion[],signal:AbortSignal):Promise<Record<string,Evaluation>>{
  const role=conversation.targetRole??(conversation.transcript.some(t=>t.speaker==='operator')?'operator':'bot');
  const headers=await authHeaders(),url=endpoint(window.FREEDOM_QA_CONFIG?.analysisEndpoint);
- const response=await fetch(url+'?action=enqueue',{method:'POST',headers,body:JSON.stringify({conversation:{conversation_id:conversation.sourceId??conversation.id,language:conversation.language,channel:conversation.channel,transcript:conversation.transcript},target_role:role,checklist}),signal});
+ const response=await fetch(url+'?action=enqueue',{method:'POST',headers,body:JSON.stringify({conversation:{conversation_id:await analysisId(conversation),language:conversation.language,channel:conversation.channel,transcript:conversation.transcript},target_role:role,checklist}),signal});
  let job=await response.json();if(!response.ok)throw Error(job.error??`Ошибка очереди (${response.status}).`);
  const started=Date.now();
  while(!['completed','failed'].includes(job.status)){
