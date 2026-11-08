@@ -85,7 +85,11 @@ async function analyze(body, {modelUrl = 'http://127.0.0.1:8080', fetchImpl = fe
   } catch {
     throw new HttpError(503, 'Локальная модель не запущена. Запустите llama-server на порту 8080.');
   }
-  if (!response.ok) throw new HttpError(502, `Локальная модель ответила ошибкой (${response.status}).`);
+  if (!response.ok) {
+    const detail = await response.text().catch(() => '');
+    if (/exceeds the available context/i.test(detail)) throw new HttpError(413, 'Диалог не помещается в контекст модели. Запустите llama-server с параметром -c 8192 или больше.');
+    throw new HttpError(502, `Локальная модель ответила ошибкой (${response.status}).`);
+  }
   const data = await response.json();
   return parseAnswer(data?.choices?.[0]?.message?.content ?? '', request);
 }
