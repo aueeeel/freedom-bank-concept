@@ -3,7 +3,7 @@
   "team_name": "жи-ши пишется через",
   "model": {
     "mode": "hybrid",
-    "name": "gpt-6-astra, qwen3:4b-instruct-2507-q4_K_M"
+    "name": "qwen3.5:4b single-pass + previous cached model runs; docs/dev-live-audit.json"
   },
   "results": [
     {

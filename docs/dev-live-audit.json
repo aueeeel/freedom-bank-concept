@@ -1,0 +1,13 @@
+{
+  "updated_at": "2026-11-08T11:55:56.963593+05:00",
+  "validation": {
+    "records": 65,
+    "ok": 7,
+    "errors": 58,
+    "unique_ids": true,
+    "all_evidence_indices_valid": true,
+    "scores_recomputed": true
+  },
+  "method": "Actual local Qwen3.5 4B single-pass inference; temperature 0; evidence indices and scores validated by code. Not manually reviewed. Prior model results retained until successfully rerun. No random labels.",
+  "new_results": []
+}
