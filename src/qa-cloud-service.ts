@@ -1,7 +1,9 @@
 import {validRating,type Conversation,type Criterion,type Evaluation,type Turn} from './qa-model';
 import {normalizeRecords} from './qa-files';
+import {requestAnalysis as requestLegacyAnalysis} from './qa-service';
 declare global {interface Window {FREEDOM_QA_CONFIG?:{analysisEndpoint?:string;transcriptionEndpoint?:string}}}
-export const available=()=>({analysis:!!window.FREEDOM_QA_CONFIG?.analysisEndpoint,transcription:!!window.FREEDOM_QA_CONFIG?.transcriptionEndpoint});
+const legacyMode=()=>!!window.FREEDOM_QA_CONFIG?.analysisEndpoint?.split('?')[0].endsWith('/api/cqa/analyze');
+export const available=()=>({analysis:!!window.FREEDOM_QA_CONFIG?.analysisEndpoint,transcription:!!window.FREEDOM_QA_CONFIG?.transcriptionEndpoint,queuedAnalysis:!!window.FREEDOM_QA_CONFIG?.analysisEndpoint&&!legacyMode()});
 function endpoint(value:string|undefined){if(!value)throw Error('Сервис пока не подключён. Можно выполнить ручную проверку.');const url=new URL(value,location.origin);if(url.origin!==location.origin)throw Error('Настройте серверный маршрут на домене сайта.');return url.href;}
 const pause=(ms:number,signal:AbortSignal)=>new Promise<void>((resolve,reject)=>{
  if(signal.aborted){reject(new DOMException('Остановлено','AbortError'));return;}
@@ -17,6 +19,10 @@ export async function analysisId(c:Conversation){
 }
 export async function requestAnalysis(conversation:Conversation,checklist:Criterion[],signal:AbortSignal):Promise<Record<string,Evaluation>>{
  const role=conversation.targetRole??(conversation.transcript.some(t=>t.speaker==='operator')?'operator':'bot');
+ if(legacyMode()){
+  if(role!=='operator')throw Error('Этот локальный адаптер обучен оценке оператора. Отдельная оценка бота доступна через основной проверяющий.');
+  return requestLegacyAnalysis(conversation,checklist,signal);
+ }
  const headers=await authHeaders(),url=endpoint(window.FREEDOM_QA_CONFIG?.analysisEndpoint);
  const response=await fetch(url+'?action=enqueue',{method:'POST',headers,body:JSON.stringify({conversation:{conversation_id:await analysisId(conversation),language:conversation.language,channel:conversation.channel,transcript:conversation.transcript},target_role:role,checklist}),signal});
  let job=await response.json();if(!response.ok)throw Error(job.error??`Ошибка очереди (${response.status}).`);

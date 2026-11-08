@@ -33,7 +33,7 @@ function App({storageKey}:{storageKey:string|null}){
  const capabilities=available();
  const [fileBatch,setFileBatch]=useState<{ids:string[];name:string}|null>(null),[fileProgress,setFileProgress]=useState('');
  const batchCases=uploadedConversations(cases,fileBatch?.ids??[]);
- async function runFileAI(){if(storageKey){setNotice("Войдите в аккаунт менеджера для автоматической проверки файла.");return;}if(busy||!capabilities.analysis||!batchCases.length)return;const token=++operation.current,controller=new AbortController();abort.current=controller;setBusy(true);setNotice('');
+ async function runFileAI(){if(storageKey&&capabilities.queuedAnalysis){setNotice("Войдите в аккаунт менеджера для автоматической проверки файла.");return;}if(busy||!capabilities.analysis||!batchCases.length)return;const token=++operation.current,controller=new AbortController();abort.current=controller;setBusy(true);setNotice('');
   try{const result=await analyseFile(batchCases,controller.signal,c=>requestAnalysis(c,checklist,controller.signal),(c,evaluations)=>{if(operation.current===token)update(c.id,item=>({...item,evaluations,reviewSource:'ai',events:[...item.events,message('Завершена отдельная оценка этого диалога из файла.')]}));},(done,total,name)=>setFileProgress(`Файл: ${done}/${total} · ${name}`));
    if(operation.current===token)setNotice(`Проверено диалогов: ${result.completed}/${result.total}; ошибок: ${result.errors.length}. ${result.cancelled?'Остановлено. ':''}${result.errors.map(e=>e.name+': '+e.error).join('; ')}`);
   }finally{if(operation.current===token){setBusy(false);setFileProgress('');}}
