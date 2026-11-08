@@ -15,7 +15,7 @@ export async function inviteEmployee(id:string,email:string){const {data,error}=
 export async function editEmployee(id:string,name:string,aliases:string[]){checked(await db().from('cqa_employees').update({name:name.trim(),aliases}).eq('id',id).select('id').single());}
 export async function linkEmployee(id:string,email:string){checked(await db().rpc('cqa_link_employee',{p_employee_id:id,p_email:email.trim()}));}
 export async function saveReview(c:Conversation,checklist:Criterion[],employeeId:string,evidence:string[]):Promise<{id:string;version:number}>{
- validateChecklist(checklist);if(c.demo)throw Error('Учебный пример не сохраняется в рейтинги настоящей команды.');if(!c.transcript.length)throw Error('Сначала загрузите транскрипт разговора.');
+ validateChecklist(checklist);if(c.targetRole==='bot')throw Error('Оценка бота хранится отдельно от рейтинга сотрудника.');if(c.demo)throw Error('Учебный пример не сохраняется в рейтинги настоящей команды.');if(!c.transcript.length)throw Error('Сначала загрузите транскрипт разговора.');
  const fingerprint=await conversationFingerprint(c);const old=checked(await db().from('cqa_conversations').select('id,version').eq('fingerprint',fingerprint).maybeSingle());
  if(old&&(!c.savedReviewId||old.id!==c.savedReviewId||old.version!==c.savedVersion))throw Error('Этот разговор уже сохранён или изменился. Откройте его в профиле: повторная загрузка не перезаписывает оценки и апелляции.');
  const payload={employee_id:employeeId,fingerprint,source_id:c.sourceId??null,name:c.name,language:c.language,channel:c.channel,transcript:c.transcript,checklist,evaluations:c.evaluations,assignment_evidence:evidence,review_source:c.demo?'demo':c.reviewSource??'manual'};

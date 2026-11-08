@@ -1,2 +1,2 @@
-// Public URLs only. Provider API keys belong on a future server, never here.
-window.FREEDOM_QA_CONFIG={analysisEndpoint:'',transcriptionEndpoint:''};
+// Public same-origin endpoints only. Credentials stay on the server.
+window.FREEDOM_QA_CONFIG={analysisEndpoint:'/api/cqa',transcriptionEndpoint:''};
