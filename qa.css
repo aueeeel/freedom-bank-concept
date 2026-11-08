@@ -106,3 +106,8 @@ body.check-page .qa-welcome-note i {background:#fff}
 body.check-page .qa-drawer::backdrop {background:#000b;backdrop-filter:none}
 
 .qa-import-mode{font-family:inherit;max-width:165px;border:1px solid #ffffff30;background:#000;color:#fff;cursor:pointer}.qa-import-mode:focus-visible{outline:2px solid #b6f34a;outline-offset:3px}.qa-import-mode:disabled{opacity:.6;cursor:default}
+.freedom .qa-batch-start{width:100%;font-size:10px;min-height:36px;height:36px;margin-top:12px}
+.qa-batch{margin-top:12px;padding:10px;border:1px solid var(--qa-line);border-radius:10px;display:grid;gap:6px;font-size:10px;color:#c6d1bd}
+.qa-batch small{color:#7d8e70;font-size:9px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.qa-batch progress{width:100%;height:4px;accent-color:#b6f34a}
+.qa-batch .qa-quiet{justify-self:start;font-size:9px}
