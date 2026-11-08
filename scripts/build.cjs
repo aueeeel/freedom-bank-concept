@@ -9,6 +9,7 @@ esbuild.buildSync({entryPoints:[path.join(root,'src/employees.tsx')],bundle:true
 esbuild.buildSync({entryPoints:[path.join(root,'src/qa-app.tsx')],bundle:true,minify:true,format:'iife',platform:'browser',target:['es2022'],jsx:'automatic',define:{'process.env.NODE_ENV':'"production"'},outfile:path.join(root,'qa.js'),legalComments:'eof'});
 esbuild.buildSync({entryPoints:[path.join(root,'src/qa-pdf.ts')],bundle:true,minify:true,format:'esm',platform:'browser',target:['es2022'],outfile:path.join(root,'assets/pdf-reader.mjs'),legalComments:'eof'});
 esbuild.buildSync({entryPoints:[path.join(root,'src/coach-app.tsx')],bundle:true,minify:true,format:'iife',platform:'browser',target:['es2022'],jsx:'automatic',define:{'process.env.NODE_ENV':'"production"'},outfile:path.join(root,'coach.js'),legalComments:'eof'});
+esbuild.buildSync({entryPoints:[path.join(root,'src/coach-model.ts')],bundle:true,minify:true,format:'esm',platform:'node',target:['node22'],outfile:path.join(root,'lib/coach-profile.mjs')});
 const tailwindPackage=JSON.parse(fs.readFileSync(path.join(root,'node_modules/@tailwindcss/cli/package.json'),'utf8'));
 const tailwindBin=typeof tailwindPackage.bin==='string'?tailwindPackage.bin:tailwindPackage.bin.tailwindcss;
 execFileSync(process.execPath,[path.join(root,'node_modules/@tailwindcss/cli',tailwindBin),'-i',path.join(root,'src/team.css'),'-o',path.join(root,'team.css'),'--minify'],{cwd:root,stdio:'inherit'});

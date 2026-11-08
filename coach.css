@@ -7,3 +7,5 @@ body.coach-page{background:#000;color:#fff;color-scheme:dark}.coach-page .header
 
 body.coach-page{min-height:100svh}.coach-page .freedom{min-height:100svh}
 @media(min-width:701px){.coach-page .header{height:88px}.coach-page #coach-root{padding-top:24px}.coach-conversation{height:clamp(190px,calc(100svh - 500px),500px)}}
+
+.coach-mode{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:14px 24px;border-bottom:1px solid #222}.coach-mode button{padding:9px 12px;border-radius:9px;background:#111;border:1px solid #333;font-size:11px;color:#ccc}.coach-mode button[aria-pressed="true"]{border-color:#b6f34a66;color:var(--lime);background:#16200e}.coach-mode button:disabled{opacity:.4}.coach-mode>span{color:#a4a4a4;font-size:9px;line-height:1.8;margin-left:auto}.coach-conversation{height:clamp(190px,calc(100svh - 560px),470px)}@media(max-width:700px){.coach-mode{padding:14px}.coach-mode>span{width:100%;margin-left:0}.coach-conversation{height:440px}}
