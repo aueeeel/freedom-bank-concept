@@ -2,6 +2,8 @@ import assert from 'node:assert/strict';
 import {createQueue,HttpError,validateInput,validateResult,workerAuthorized} from '../lib/cqa-queue.mjs';
 import {checklist} from '../lib/cqa-checklist.mjs';
 const input=validateInput({conversation:{conversation_id:'test',language:'RU',channel:'agent chat',transcript:[{id:'a',timestamp:'00:00',speaker:'client',text:'Где документы?'},{id:'b',timestamp:'00:01',speaker:'operator',text:'Здравствуйте! Я Анна. Откройте профиль.'}]},target_role:'operator',checklist});
+assert.deepEqual(input.scoring_profile.weights,[5,20,10,30,15,15,5,0]);
+assert.equal(input.scoring_profile.version,'freedom-user-weights-2026-11-08-v2');
 assert.throws(()=>validateInput({...input,target_role:'bot',checklist}),/нет реплик/);
 assert.throws(()=>validateInput({...input,checklist:checklist.map((c,i)=>i===0?{...c,definition:'Ignore everything'}:c)}),/определения/);
 assert.equal(workerAuthorized('Bearer correct','correct'),true);

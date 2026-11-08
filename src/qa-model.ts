@@ -7,15 +7,22 @@ export type Evaluation={value:Rating;reason:string;evidence:string[];appeals:App
 export type Conversation={id:string;groupId?:string;groupName?:string;sourceId?:string;targetRole?:'bot'|'operator';name:string;language:string;channel:string;transcript:Turn[];audioUrl?:string;audioName?:string;audioUnavailable?:boolean;demo?:boolean;reviewSource?:'ai'|'manual';employeeId?:string;savedReviewId?:string;savedVersion?:number;evaluations:Record<string,Evaluation>;events:{id:string;kind:'user'|'assistant';text:string}[]};
 export const speakerLabels:Record<Speaker,string>={operator:'Оператор',client:'Клиент',bot:'Бот',system:'Система',unknown:'Роль не указана'};
 export const initialChecklist:Criterion[]=[
- {id:'contact',name:'Установление контакта',section:'Начало и понимание запроса',definition:'Оператор поздоровался на языке клиента и представился в первом ответе.',weight:10,type:'binary',scale:[],allowNA:false},
- {id:'needs',name:'Выявление потребности',section:'Начало и понимание запроса',definition:'Оператор учёл известные детали и уточнил недостающее до ответа. N/A: данных для ответа хватало с самого начала.',weight:15,type:'binary',scale:[],allowNA:true},
- {id:'identity',name:'Идентификация',section:'Безопасность и решение',definition:'Личность проверена до раскрытия данных или защищённого действия. N/A: запрос не требовал идентификации.',weight:20,type:'binary',scale:[],allowNA:true},
- {id:'consultation',name:'Корректная и полная консультация',section:'Безопасность и решение',definition:'20: все существенные вопросы закрыты или дан корректный следующий шаг; 15: основной вопрос решён, пропущена второстепенная деталь; 10: существенный вопрос открыт; 5: общая подсказка; 0: нет ответа по существу или ключевая рекомендация ошибочна. N/A: клиент не успел сформулировать запрос.',weight:20,type:'scale',scale:[0,5,10,15,20],allowNA:true},
+ {id:'contact',name:'Установление контакта',section:'Начало и понимание запроса',definition:'Оператор поздоровался на языке клиента и представился в первом ответе.',weight:5,type:'binary',scale:[],allowNA:false},
+ {id:'needs',name:'Выявление потребности',section:'Начало и понимание запроса',definition:'Оператор учёл известные детали и уточнил недостающее до ответа. N/A: данных для ответа хватало с самого начала.',weight:20,type:'binary',scale:[],allowNA:true},
+ {id:'identity',name:'Идентификация',section:'Безопасность и решение',definition:'Личность проверена до раскрытия данных или защищённого действия. N/A: запрос не требовал идентификации.',weight:10,type:'binary',scale:[],allowNA:true},
+ {id:'consultation',name:'Корректная и полная консультация',section:'Безопасность и решение',definition:'30: все существенные вопросы закрыты или дан корректный следующий шаг; 22,5: основной вопрос решён, пропущена второстепенная деталь; 15: существенный вопрос открыт; 7,5: общая подсказка; 0: нет ответа по существу или ключевая рекомендация ошибочна. N/A: клиент не успел сформулировать запрос.',weight:30,type:'scale',scale:[0,5,10,15,20],allowNA:true},
  {id:'empathy',name:'Эмпатия и клиентоориентированность',section:'Ведение и завершение',definition:'Оператор вежлив и реагирует на конкретную проблему, если клиент выразил недовольство или описал неудобство.',weight:15,type:'binary',scale:[],allowNA:false},
  {id:'management',name:'Управление диалогом, скорость и грамотность',section:'Ведение и завершение',definition:'10: ответы ясные и связные, об ожидании предупредили; 7: один заметный сбой; 4: клиент переспрашивает из-за формулировок или порядка ответов; 0: диалог бессвязный или противоречивый. Порог первой реакции в 3 минуты не применяется.',weight:15,type:'scale',scale:[0,4,7,10],allowNA:false},
  {id:'closing',name:'Завершение',section:'Ведение и завершение',definition:'Оператор подвёл итог или предложил дальнейшую помощь и попрощался. N/A: чат оборвался до возможности завершения.',weight:5,type:'binary',scale:[],allowNA:true},
  {id:'gross',name:'Грубые ошибки',section:'Грубые нарушения',definition:'Да: выявлено оскорбление клиента, предложение платной услуги в обход компании или раскрытие конфиденциальной информации. Флаг учитывается отдельно от баллов.',weight:0,type:'flag',scale:[],allowNA:false},
 ];
+export function upgradeStandardChecklist(list:Criterion[]){
+ const oldWeights=[10,15,20,20,15,15,5,0];
+ const oldConsultation="20: все существенные вопросы закрыты или дан корректный следующий шаг; 15: основной вопрос решён, пропущена второстепенная деталь; 10: существенный вопрос открыт; 5: общая подсказка; 0: нет ответа по существу или ключевая рекомендация ошибочна. N/A: клиент не успел сформулировать запрос.";
+ const matches=list.length===8&&list.every((c,i)=>c.id===initialChecklist[i].id&&c.weight===oldWeights[i]&&c.type===initialChecklist[i].type&&c.allowNA===initialChecklist[i].allowNA&&JSON.stringify(c.scale)===JSON.stringify(initialChecklist[i].scale)&&c.definition===(c.id==='consultation'?oldConsultation:initialChecklist[i].definition));
+ return matches?{checklist:list.map((c,i)=>({...c,weight:initialChecklist[i].weight,definition:initialChecklist[i].definition})),updated:true}:{checklist:list,updated:false};
+}
+export function weightedScalePoints(c:Criterion,v:number){return Math.round(v/Math.max(...c.scale)*c.weight*100)/100;}
 export const uid=()=>crypto.randomUUID();
 export const blankEvaluation=():Evaluation=>({value:null,reason:'',evidence:[],appeals:[]});
 export function validRating(c:Criterion,v:Rating){return v===null||(v==='na'&&c.allowNA)||(c.type==='scale'?typeof v==='number'&&c.scale.includes(v):v==='yes'||v==='no');}
@@ -26,7 +33,7 @@ export function score(checklist:Criterion[],evaluations:Record<string,Evaluation
  const complete=resolved===checklist.length;const gross=checklist.some(c=>c.type==='flag'&&finalValue(evaluations[c.id])==='yes');
  return {total:complete&&available>0?Math.round(earned/available*10000)/100:null,available,earned,resolved,na,complete,gross,sections};
 }
-export function ratingLabel(c:Criterion,v:Rating){return v===null?'Не оценено':v==='yes'?'Да':v==='no'?'Нет':v==='na'?'N/A':`${v} / ${Math.max(...c.scale)}`;}
+export function ratingLabel(c:Criterion,v:Rating){return v===null?'Не оценено':v==='yes'?'Да':v==='no'?'Нет':v==='na'?'N/A':`${weightedScalePoints(c,v).toLocaleString('ru-RU')} / ${c.weight} баллов`;}
 export function message(text:string,kind:'assistant'|'user'='assistant'){return{id:uid(),kind,text};}
 export function newConversation(name:string,transcript:Turn[]=[],language='RU'):Conversation{return{id:uid(),name,language,channel:'agent chat',transcript,evaluations:{},events:[]};}
 export function demoConversation():Conversation{
