@@ -1,5 +1,5 @@
 export type Speaker='operator'|'client'|'bot'|'system'|'unknown';
-export type Turn={id:string;timestamp:string;speaker:Speaker;text:string;originalSpeaker?:string};
+export type Turn={id:string;timestamp:string;speaker:Speaker;text:string;originalSpeaker?:string;voice?:string;startSec?:number;endSec?:number};
 export type Criterion={id:string;name:string;section:string;definition:string;weight:number;type:'binary'|'scale'|'flag';scale:number[];allowNA:boolean};
 export type Rating='yes'|'no'|'na'|number|null;
 export type Appeal={id:string;comment:string;createdAt:string;decision?:{value:Rating;reason:string;at:string;source?:'ai'|'human';requiresReview?:boolean}};

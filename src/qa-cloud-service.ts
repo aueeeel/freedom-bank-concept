@@ -1,7 +1,7 @@
 import {validRating,type Conversation,type Criterion,type Evaluation,type Turn} from './qa-model';
 import {normalizeRecords} from './qa-files';
 import {requestAnalysis as requestLegacyAnalysis} from './qa-service';
-declare global {interface Window {FREEDOM_QA_CONFIG?:{analysisEndpoint?:string;transcriptionEndpoint?:string}}}
+declare global {interface Window {FREEDOM_QA_CONFIG?:{analysisEndpoint?:string;transcriptionEndpoint?:string;transcriptionUpload?:'blob'|'direct'}}}
 const legacyMode=()=>!!window.FREEDOM_QA_CONFIG?.analysisEndpoint?.split('?')[0].endsWith('/api/cqa/analyze');
 export const available=()=>({analysis:!!window.FREEDOM_QA_CONFIG?.analysisEndpoint,transcription:!!window.FREEDOM_QA_CONFIG?.transcriptionEndpoint,queuedAnalysis:!!window.FREEDOM_QA_CONFIG?.analysisEndpoint&&!legacyMode()});
 function endpoint(value:string|undefined){if(!value)throw Error('Сервис пока не подключён. Можно выполнить ручную проверку.');const url=new URL(value,location.origin);if(url.origin!==location.origin)throw Error('Настройте серверный маршрут на домене сайта.');return url.href;}
@@ -61,4 +61,5 @@ export async function requestAppeal(conversation:Conversation,criterion:Criterio
  if(!row||!validRating(criterion,value)||typeof row.explanation!=='string'||!Array.isArray(row.evidence)||row.evidence.some((e:any)=>!ids.has(e.message_id)))throw Error('Пересмотр вернул некорректное решение.');
  return{value,reason:row.explanation+'\nРешение ИИ предварительное; аргумент апелляции не становится обучающим эталоном автоматически.',evidence:row.evidence.map((e:any)=>e.message_id) as string[],sourceJobId:job.id,requiresReview:true};
 }
-export async function requestTranscription(file:File,signal:AbortSignal):Promise<Turn[]>{const form=new FormData();form.set('audio',file);const response=await fetch(endpoint(window.FREEDOM_QA_CONFIG?.transcriptionEndpoint),{method:'POST',body:form,signal});if(!response.ok)throw Error(`Не удалось расшифровать аудио (${response.status}).`);const data=await response.json();if(!Array.isArray(data.transcript))throw Error('В ответе отсутствует транскрипт.');return normalizeRecords({transcript:data.transcript})[0].transcript;}
+// Распознавание аудио с разделением на оператора и клиента — см. qa-service.ts.
+export {requestTranscription,type TranscriptionResult} from './qa-service';

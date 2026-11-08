@@ -121,3 +121,42 @@ body.check-page .qa-drawer::backdrop {background:#000b;backdrop-filter:none}
 .qa-group-name small{display:block;color:#7d8e70;font-size:9px;margin-top:3px}
 .qa-group-row b{font-weight:600;font-size:10px;color:#c6d1bd;white-space:nowrap}
 @media (max-width:640px){.qa-group-row{grid-template-columns:1fr;gap:4px}}
+/* Рентген разговора */
+.xr{margin-top:14px;padding:14px;border:1px solid var(--qa-line);border-radius:14px;background:#ffffff04;display:grid;gap:14px;--xr-op:#b6f34a;--xr-cl:#7cc4ff;--xr-other:#9ca991;--xr-bad:#ff7a6b}
+.xr-head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.xr-tabs{display:flex;gap:4px;padding:3px;border:1px solid var(--qa-line);border-radius:999px}
+.xr-tabs button{background:none;border:0;border-radius:999px;padding:6px 12px;color:#c6d1bd;font-size:11px;cursor:pointer}
+.xr-tabs button.active{background:#b6f34a1f;color:#e9f7d6}
+.xr-voices{display:flex;flex-wrap:wrap;align-items:center;gap:10px;font-size:11px;color:#c6d1bd}
+.xr-voices label{display:flex;align-items:center;gap:6px}
+.xr-voices select{background:#0c120a;color:#e3eadb;border:1px solid var(--qa-line);border-radius:8px;padding:4px 6px;font-size:11px}
+.xr-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(118px,1fr));gap:8px;margin:0}
+.xr-stats>div{border:1px solid var(--qa-line);border-radius:10px;padding:9px 10px;display:grid;gap:3px}
+.xr-stats dt{font-size:9px;letter-spacing:.06em;text-transform:uppercase;color:#7d8e70}
+.xr-stats dd{margin:0;font-size:17px;font-weight:600;color:#eef6e4;font-variant-numeric:tabular-nums}
+.xr-stats small{font-size:9px;color:#7d8e70}
+.xr-share{height:4px;border-radius:2px;background:var(--xr-cl);overflow:hidden}.xr-share i{display:block;height:100%;background:var(--xr-op)}
+.xr-chart{display:grid;gap:8px;position:relative;padding-bottom:18px}
+.xr-lane{display:grid;grid-template-columns:72px 1fr;align-items:center;gap:8px}
+.xr-lane-name{font-size:10px;color:#9ca991}
+.xr-track{position:relative;height:22px;border-radius:6px;background:#ffffff08}
+.xr-bar{position:absolute;top:3px;bottom:3px;min-width:3px;border:0;border-radius:4px;padding:0;cursor:pointer;background:var(--xr-other);opacity:.85}
+.xr-bar.operator{background:var(--xr-op)}.xr-bar.client{background:var(--xr-cl)}
+.xr-bar.issue{box-shadow:0 0 0 2px var(--xr-bad)}
+.xr-bar:hover,.xr-bar.focused{opacity:1;top:0;bottom:0}
+.xr-axis{position:absolute;left:80px;right:0;bottom:0;height:14px}
+.xr-axis span{position:absolute;transform:translateX(-50%);font-size:9px;color:#7d8e70;font-variant-numeric:tabular-nums}
+.xr-axis span:first-child{transform:none}.xr-axis span:last-child{transform:translateX(-100%)}
+.xr-issues{list-style:none;margin:0;padding:0;display:grid;gap:5px}
+.xr-issues button{width:100%;display:grid;grid-template-columns:auto auto 1fr;gap:10px;align-items:baseline;text-align:left;background:#ff7a6b0d;border:1px solid #ff7a6b33;border-radius:8px;padding:7px 10px;color:#f1e1dd;font-size:11px;cursor:pointer}
+.xr-issues button.severe{background:#ff7a6b22;border-color:#ff7a6b77}
+.xr-issues b{font-variant-numeric:tabular-nums;color:var(--xr-bad)}
+.xr-issues span{color:#a99b97;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.xr-split{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.xr-split h4{margin:0 0 8px;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--xr-op)}
+.xr-split section:last-child h4{color:var(--xr-cl)}
+.xr-line{display:grid;gap:3px;width:100%;text-align:left;background:#ffffff05;border:1px solid var(--qa-line);border-radius:9px;padding:8px 10px;margin-bottom:6px;color:#e3eadb;font-size:12px;line-height:1.45;cursor:pointer}
+.xr-line time{font-size:10px;color:#7d8e70;font-variant-numeric:tabular-nums}
+.xr-line.issue{border-color:#ff7a6b66}.xr-line.focused{border-color:#b6f34a88}
+.xr-empty{color:#7d8e70;font-size:11px;margin:0}
+@media (max-width:640px){.xr-split{grid-template-columns:1fr}.xr-lane{grid-template-columns:56px 1fr}.xr-axis{left:64px}.xr-issues button{grid-template-columns:auto 1fr}.xr-issues span{display:none}}
