@@ -1,0 +1,3 @@
+# Core grading and web service use Python 3.12 standard library only.
+# Optional PDF utilities:
+pypdf>=6,<7

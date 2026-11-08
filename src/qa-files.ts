@@ -15,7 +15,9 @@ function turns(raw:unknown):Turn[]{
   const original=item?.message_id??item?.id;
   const id=typeof original==='string'&&original.trim()&&original.length<=160?original:'m'+String(index).padStart(5,'0');
   if(seen.has(id))throw Error('В диалоге повторяется ID реплики: '+id);seen.add(id);
-  return{id,timestamp:String(item?.timestamp??item?.time??item?.start??''),speaker:role(item?.speaker??item?.role),originalSpeaker:String(item?.speaker??item?.role??''),text};
+  const sec=(v:unknown)=>typeof v==='number'&&Number.isFinite(v)&&v>=0&&v<86400?v:undefined;
+  const voice=typeof item?.voice==='string'&&item.voice.length<=40?item.voice:undefined;
+  return{id,timestamp:String(item?.timestamp??item?.time??item?.start??''),speaker:role(item?.speaker??item?.role),originalSpeaker:String(item?.speaker??item?.role??''),text,...(voice?{voice}:{}),...(sec(item?.start_seconds)!==undefined?{startSec:sec(item.start_seconds)}:{}),...(sec(item?.end_seconds)!==undefined?{endSec:sec(item.end_seconds)}:{})};
  });
 }
 export function normalizeRecords(raw:any,name='Загруженный диалог'):Conversation[]{

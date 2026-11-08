@@ -1,0 +1,34 @@
+{
+  "method": "TF-IDF example retrieval; language-model weights unchanged",
+  "label_quality": "assistant_authored_synthetic_reference",
+  "new_train_dialogues": 60,
+  "new_train_roles": 115,
+  "excluded_ambiguous_roles": [
+    {
+      "conversation_id": "synfull-b4155ff6da315f",
+      "target_role": "operator"
+    },
+    {
+      "conversation_id": "synfull-3d9dba5be01e4a",
+      "target_role": "operator"
+    },
+    {
+      "conversation_id": "synfull-cdcaf229980a7e",
+      "target_role": "operator"
+    },
+    {
+      "conversation_id": "synfull-e79298cd8e1b06",
+      "target_role": "operator"
+    },
+    {
+      "conversation_id": "synfull-67f5c2b1ad35af",
+      "target_role": "bot"
+    }
+  ],
+  "diagnostic_examples": 40,
+  "total_criterion_examples": 960,
+  "heldout_dialogues_exposed": 0,
+  "language_model_weights_trained": false,
+  "same_family_excluded_at_inference": true,
+  "content_digest": "a9506e33d3210bbd33940bb1d7a3d561b70859144c97b8621362b078eae96a75"
+}

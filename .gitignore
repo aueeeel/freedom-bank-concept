@@ -17,3 +17,23 @@ AUTH-SETUP.md
 # Supabase CLI local caches
 supabase/.temp/
 supabase/.branches/
+
+# Local checker: never publish credentials, customer transcripts, history, caches, or model weights
+**/__pycache__/
+**/*.pyc
+checker/.venv/
+checker/data/
+checker/cache/
+checker/results/
+checker/local-runtime/
+checker/local-models/
+checker/config/*.local.json
+local-ui/dist/
+local-ui/logs/
+swap/swap_dialogues.json
+swap/results.swap.json
+swap/evaluations/
+swap/cache/
+*.sqlite3
+*.sqlite3-wal
+*.sqlite3-shm

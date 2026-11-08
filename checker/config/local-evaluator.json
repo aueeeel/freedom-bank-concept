@@ -1,0 +1,8 @@
+{
+  "model": "qwen3.5:4b",
+  "model_digest": "d8b0f5e9760cd1682034f292d7ef72ec46f432149be0df7574bf2d6e92e38c04",
+  "num_ctx": 4096,
+  "num_gpu": 20,
+  "facts_version": "observable-facts-4",
+  "requires_manual_review": true
+}

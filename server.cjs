@@ -7,10 +7,27 @@ const types = {'.html':'text/html; charset=utf-8','.css':'text/css; charset=utf-
 // Включается переменной CQA_MODEL_URL, например http://127.0.0.1:8080 (llama-server).
 const modelUrl = process.env.CQA_MODEL_URL || '';
 const localModel = modelUrl ? require('./cqa-local-model.cjs') : null;
+// Распознавание аудио через OpenAI (локально): включается переменной OPENAI_API_KEY.
+const openaiKey = process.env.OPENAI_API_KEY || '';
+async function localTranscribe(req,res){
+  const send=(status,body)=>{res.writeHead(status,{'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store'});res.end(JSON.stringify(body));};
+  try{
+    const engine=await import('./lib/transcribe-engine.mjs');
+    if(req.method!=='POST')return send(405,{error:'Метод не поддерживается.'});
+    if(Number(req.headers['content-length']||0)>engine.transcribeLimits.maxBytes+1e6)return send(413,{error:'Аудиофайл больше 25 МБ.'});
+    const form=await new Response(req,{headers:{'content-type':req.headers['content-type']||''}}).formData();
+    const file=form.get('audio');if(!file||typeof file==='string')return send(400,{error:'Прикрепите аудиофайл.'});
+    const result=await engine.transcribeAudio({bytes:await file.arrayBuffer(),filename:file.name,key:openaiKey,signal:AbortSignal.timeout(280000)});
+    if(!result.segments.length)return send(422,{error:'В записи не найдено речи.'});
+    send(200,{...engine.segmentsToTranscript(result.segments),duration:result.duration});
+  }catch(e){send(e.status||500,{error:e.status?e.message:'Распознавание временно недоступно.'});}
+}
+const localConfig=`window.FREEDOM_QA_CONFIG={analysisEndpoint:'${modelUrl?'/api/cqa/analyze':''}',transcriptionEndpoint:'${openaiKey?'/api/transcribe':''}',transcriptionUpload:'direct'};`;
 http.createServer((req,res) => {
   const pathname = (() => { try { return new URL(req.url,'http://localhost').pathname; } catch { return ''; } })();
   if(localModel && pathname==='/api/cqa/analyze'){localModel.handle(req,res,{modelUrl});return;}
-  if(localModel && pathname==='/qa-config.js'){res.writeHead(200,{'Content-Type':types['.js'],'Cache-Control':'no-store'});res.end("window.FREEDOM_QA_CONFIG={analysisEndpoint:'/api/cqa/analyze',transcriptionEndpoint:''};");return;}
+  if(openaiKey && pathname==='/api/transcribe'){localTranscribe(req,res);return;}
+  if((localModel||openaiKey) && pathname==='/qa-config.js'){res.writeHead(200,{'Content-Type':types['.js'],'Cache-Control':'no-store'});res.end(localConfig);return;}
   let filename;
   try { filename = path.resolve(root, '.' + decodeURIComponent(new URL(req.url,'http://localhost').pathname)); } catch {res.writeHead(400).end();return;}
   if(filename === root) filename=path.join(root,'index.html');
@@ -22,4 +39,4 @@ http.createServer((req,res) => {
     if(range){const match=/^bytes=(\d*)-(\d*)$/.exec(range);if(!match){res.writeHead(416).end();return;}const start=match[1]?Number(match[1]):Math.max(0,stat.size-Number(match[2]));const end=match[1]&&match[2]?Math.min(Number(match[2]),stat.size-1):stat.size-1;if(start>end||start>=stat.size){res.writeHead(416,{'Content-Range':`bytes */${stat.size}`}).end();return;}res.writeHead(206,{...headers,'Content-Range':`bytes ${start}-${end}/${stat.size}`,'Content-Length':end-start+1});if(req.method==='HEAD'){res.end();return;}fs.createReadStream(filename,{start,end}).pipe(res);}
     else{res.writeHead(200,{...headers,'Content-Length':stat.size});if(req.method==='HEAD'){res.end();return;}fs.createReadStream(filename).pipe(res);}
   });
-}).listen(Number(process.env.PORT||4173),'127.0.0.1',()=>console.log(`Freedom Bank: http://127.0.0.1:${process.env.PORT||4173}${modelUrl?` · автооценка через ${modelUrl}`:''}`));
+}).listen(Number(process.env.PORT||4173),'127.0.0.1',()=>console.log(`Freedom Bank: http://127.0.0.1:${process.env.PORT||4173}${modelUrl?` · автооценка через ${modelUrl}`:''}${openaiKey?' · распознавание аудио через OpenAI':''}`));

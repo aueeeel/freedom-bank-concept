@@ -1,0 +1,46 @@
+@import "tailwindcss/theme.css";
+@import "tailwindcss/utilities.css";
+@source "./TeamLanyardRail.tsx";
+@source "./employees.tsx";
+@theme{
+  --font-sans:"Montserrat","Segoe UI",sans-serif;
+  --color-background:#0c110b;
+  --color-foreground:#1d2b17;
+  --color-card:#f3f6ef;
+  --color-card-foreground:#1c2815;
+  --color-muted:#e0e7d7;
+  --color-muted-foreground:#6e7a64;
+  --color-border:#ced8c4;
+  --color-ring:#b6f34a;
+  --color-chart-1:#b6f34a;
+  --color-chart-2:#83ba6d;
+  --color-chart-3:#d6df9c;
+  --color-chart-4:#77a58b;
+  --color-chart-5:#b7cc85;
+}
+body.employees-page{background:#0c110b}
+.employees-page .background-shade{background:linear-gradient(180deg,#03070380 0%,#03070366 48%,#03070380 100%)}
+.employees-page .freedom{min-height:100svh;display:flex;flex-direction:column}
+.employees-page .header{flex:none;border-bottom:1px solid #ffffff14}
+.employees-page .footer{margin-top:auto;flex:none}
+.team-content{padding:0 4.2% 30px}
+.team-intro{max-width:850px;margin:52px auto 24px;text-align:center}
+.team-title{font-size:clamp(34px,4.4vw,64px);font-weight:450;line-height:1.15;letter-spacing:-2.3px;text-wrap:balance}
+.team-title span{color:var(--lime)}
+.team-lead{font-size:13px;color:#d2dcc9;margin:20px auto 0;line-height:1.8;padding:0 12px;text-shadow:0 1px 12px #0008}
+.team-lanyard{max-width:1180px;margin:auto;color:#eaf0e4;border-radius:24px;background:transparent}
+.team-lanyard [data-stage]{margin-top:22px}
+.team-lanyard[data-mode="carousel"] [data-stage]{mask-image:linear-gradient(90deg,transparent,#000 32px,#000 calc(100% - 32px),transparent)}
+.team-lanyard [data-stage]>.bg-gradient-to-r,.team-lanyard [data-stage]>.bg-gradient-to-l{display:none}
+.team-lanyard [data-badge]{background:transparent;font-family:Montserrat,"Segoe UI",sans-serif;color:#1c2815}
+.team-lanyard [data-badge]:hover{color:#1c2815}
+.team-lanyard [data-face]{box-sizing:border-box;box-shadow:0 8px 18px #0002}
+.team-lanyard [aria-live="polite"]>p{margin:0}
+.team-lanyard [aria-live="polite"]>p+p{margin-top:5px;color:#97a48c}
+.team-lanyard [role="group"][aria-label="Показать сотрудника"]>button{background:#ffffff38;padding:0;min-width:6px}
+.team-lanyard [role="group"][aria-label="Показать сотрудника"]>button[aria-current="true"]{background:var(--lime)}
+.team-page-bottom{display:flex;align-items:center;flex-direction:column;gap:22px;text-align:center;margin:0 auto 28px}
+.team-page-bottom>p{font-size:10px;line-height:1.7;color:#bdc9b3;margin:0;text-shadow:0 1px 10px #0008}
+.team-page-bottom .button{font-size:11px;min-height:45px;padding:0 25px}
+@media(max-width:1100px){.employees-page .header{padding-left:3%;padding-right:3%;gap:16px}.team-intro{margin-top:42px}.team-title{letter-spacing:-1.7px}}
+@media(max-width:760px){.team-content{padding:0 0 24px}.team-intro{margin:30px auto 10px;padding:0 20px}.team-title{font-size:37px;letter-spacing:-1.5px}.team-lead{font-size:12px;max-width:340px;margin-top:15px}.team-lanyard{border-radius:0}.team-lanyard [data-stage]{margin-top:12px}.team-page-bottom{padding:0 26px;gap:18px;margin-top:0}.team-page-bottom>p{font-size:9px}.team-lanyard [aria-live="polite"]{max-width:330px}.team-lanyard [aria-live="polite"]>p{font-size:12px}}

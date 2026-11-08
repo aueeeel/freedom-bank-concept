@@ -1,0 +1,12 @@
+const fs=require('node:fs'),path=require('node:path'),esbuild=require('esbuild');
+const root=path.resolve(__dirname,'..'),ui=path.join(root,'local-ui'),out=path.join(ui,'dist');
+if(!fs.existsSync(path.join(root,'dist/check.html')))throw Error('Run npm run build before building the local UI.');
+fs.cpSync(path.join(root,'dist'),out,{recursive:true});
+esbuild.buildSync({entryPoints:[path.join(ui,'src/qa-app.tsx')],bundle:true,minify:true,format:'iife',platform:'browser',target:['es2022'],jsx:'automatic',define:{'process.env.NODE_ENV':'"production"'},outfile:path.join(out,'qa.js'),legalComments:'eof'});
+for(const file of ['qa.css','qa-config.js','cqa-integration.css'])fs.copyFileSync(path.join(ui,file),path.join(out,file));
+const review=path.join(root,'review-ui');
+let html=fs.readFileSync(path.join(review,'index.html'),'utf8').replace('/app.js','/cqa-app.js').replace('/style.css','/cqa-style.css').replace('/favicon.svg','/cqa-favicon.svg').replace('</head>','<link rel="stylesheet" href="/cqa-integration.css"></head>');
+fs.writeFileSync(path.join(out,'appeals.html'),html);
+fs.writeFileSync(path.join(out,'cqa-app.js'),fs.readFileSync(path.join(review,'app.js'),'utf8').replace('<a class="brand" href="#/dialogues">','<a class="brand" href="/check.html">'));
+fs.copyFileSync(path.join(review,'style.css'),path.join(out,'cqa-style.css'));fs.copyFileSync(path.join(review,'favicon.svg'),path.join(out,'cqa-favicon.svg'));
+console.log('Built local UI with the current repository assets and private Python backend routes.');
