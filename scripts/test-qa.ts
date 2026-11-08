@@ -1,9 +1,18 @@
 import assert from 'node:assert/strict';
-import {initialChecklist,blankEvaluation,demoConversation,score,finalValue,validateChecklist,validRating} from '../src/qa-model';
+import {initialChecklist,blankEvaluation,demoConversation,score,finalValue,validateChecklist,validRating,upgradeStandardChecklist,weightedScalePoints,ratingLabel} from '../src/qa-model';
 import {normalizeRecords,parseText,readConversationFile,audioTime,mergeConversations,splitSections} from '../src/qa-files';
 import {uploadedConversations,fileRows,analyseFile} from '../src/qa-file-batch';
 
-const demo=demoConversation();assert.equal(score(initialChecklist,demo.evaluations).total,85.38);
+const demo=demoConversation();assert.equal(score(initialChecklist,demo.evaluations).total,82.86);
+assert.deepEqual(initialChecklist.map(c=>c.weight),[5,20,10,30,15,15,5,0]);
+assert.deepEqual(initialChecklist[3].scale.map(v=>weightedScalePoints(initialChecklist[3],v)),[0,7.5,15,22.5,30]);
+assert.deepEqual(initialChecklist[5].scale.map(v=>weightedScalePoints(initialChecklist[5],v)),[0,6,10.5,15]);
+assert.equal(ratingLabel(initialChecklist[3],10),'15 / 30 баллов');
+const legacyWeights=[10,15,20,20,15,15,5,0];
+const oldStandard=initialChecklist.map((c,i)=>({...c,weight:legacyWeights[i],definition:c.id==='consultation'?c.definition.replace('30:','20:').replace('22,5:','15:').replace('15: существенный','10: существенный').replace('7,5: общая','5: общая'):c.definition}));
+assert.equal(upgradeStandardChecklist(oldStandard).updated,true);
+assert.deepEqual(upgradeStandardChecklist(oldStandard).checklist.map(c=>c.weight),initialChecklist.map(c=>c.weight));
+assert.equal(upgradeStandardChecklist(oldStandard.map(c=>({...c,definition:c.definition+' custom'}))).updated,false);
 const batchTen=normalizeRecords({data:{records:Array.from({length:10},(_,i)=>({conversation_id:`batch-${i+1}`,language:'RU',channel:'agent chat',transcript:[{speaker:'client',timestamp:'00:00',text:`Вопрос ${i+1}`},{speaker:'operator',timestamp:'00:01',text:`Ответ ${i+1}`}]}))}});
 assert.equal(batchTen.length,10);
 assert.equal(fileRows(batchTen,initialChecklist).length,10);
@@ -22,7 +31,7 @@ full.gross.value='yes';assert.equal(score(initialChecklist,full).total,85);asser
 assert.equal(score(initialChecklist,{}).total,null);
 assert.equal(score([{...initialChecklist[1],weight:15}],{needs:{...blankEvaluation(),value:'na'}}).total,null);
 const appeal={...demo.evaluations.consultation,appeals:[{id:'a',comment:'Проверить',createdAt:'test',decision:{value:20,reason:'Запрос решён',at:'test'}}]};
-assert.equal(finalValue(appeal),20);assert.equal(appeal.value,15);assert.ok(score(initialChecklist,{...demo.evaluations,consultation:appeal}).total!>85.38);
+assert.equal(finalValue(appeal),20);assert.equal(appeal.value,15);assert.ok(score(initialChecklist,{...demo.evaluations,consultation:appeal}).total!>82.86);
 assert.throws(()=>validateChecklist([{...initialChecklist[0],weight:-1}]));assert.throws(()=>validateChecklist([{...initialChecklist[3],scale:[0,0]}]));assert.equal(validRating(initialChecklist[0],'na'),false);
 const dataset={isSuccess:true,data:{records:[{conversation_id:'test-ru',language:'RU',transcript:[{timestamp:'00:02',speaker:'operator',text:'Здравствуйте!'},{timestamp:'2026-11-07T10:00:02+05:00',speaker:'client',text:'Спасибо'}]}]}};
 const parsed=normalizeRecords(dataset);assert.equal(parsed[0].sourceId,'test-ru');assert.equal(parsed[0].transcript[1].timestamp,'2026-11-07T10:00:02+05:00');
