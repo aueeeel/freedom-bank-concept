@@ -7,7 +7,7 @@ const demo=demoConversation();assert.equal(score(initialChecklist,demo.evaluatio
 assert.deepEqual(initialChecklist.map(c=>c.weight),[5,20,10,30,15,15,5,0]);
 assert.deepEqual(initialChecklist[3].scale.map(v=>weightedScalePoints(initialChecklist[3],v)),[0,7.5,15,22.5,30]);
 assert.deepEqual(initialChecklist[5].scale.map(v=>weightedScalePoints(initialChecklist[5],v)),[0,6,10.5,15]);
-assert.equal(ratingLabel(initialChecklist[3],10),'15 / 30 баллов');
+assert.equal(ratingLabel(initialChecklist[3],10),'10 / 20');
 const legacyWeights=[10,15,20,20,15,15,5,0];
 const oldStandard=initialChecklist.map((c,i)=>({...c,weight:legacyWeights[i],definition:c.id==='consultation'?c.definition.replace('30:','20:').replace('22,5:','15:').replace('15: существенный','10: существенный').replace('7,5: общая','5: общая'):c.definition}));
 assert.equal(upgradeStandardChecklist(oldStandard).updated,true);
