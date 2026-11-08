@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import {initialChecklist,blankEvaluation,demoConversation,score,finalValue,validateChecklist,validRating} from '../src/qa-model';
-import {normalizeRecords,parseText,readConversationFile,audioTime,mergeConversations} from '../src/qa-files';
+import {normalizeRecords,parseText,readConversationFile,audioTime,mergeConversations,splitSections} from '../src/qa-files';
 import {uploadedConversations,fileRows,analyseFile} from '../src/qa-file-batch';
 
 const demo=demoConversation();assert.equal(score(initialChecklist,demo.evaluations).total,85.38);
@@ -42,4 +42,13 @@ assert.equal((await readConversationFile(handoffFile,'batch')).length,2);
 const structuredTxt=await readConversationFile(new File([JSON.stringify(handoff)],'whole-chat.txt'));assert.equal(structuredTxt.length,1);assert.equal(structuredTxt[0].transcript[3].speaker,'operator');
 await assert.rejects(()=>readConversationFile(new File([JSON.stringify({records:handoff.records.map((r,i)=>({...r,audio_url:`https://example.com/clip-${i}.mp3`}))})],'audio-set.json')),/Набор диалогов/);
 await assert.rejects(()=>readConversationFile(new File(['{oops'], 'bad.json')));
-console.log('CQA checks passed: weighting, N/A, gross flags, appeals, checklist validation, dataset, text, SRT, ISO times, CSV, invalid files, one chat stays one.');
+{const txt=`=== syn-ru-151 | agent chat | RU ===
+[00:00] client: Привет
+[01:20] operator: Ну
+
+=== syn-en-158 | voice call | EN | https://example.com/a.mp3 ===
+[2026-11-05T14:02:08+05:00] operator: Hello
+[2026-11-05T14:02:15+05:00] client: Hi
+`;const parts=splitSections(txt);assert.equal(parts.length,2);assert.equal(parts[0].sourceId,'syn-ru-151');assert.equal(parts[0].language,'RU');assert.equal(parts[1].channel,'voice call');assert.equal(parts[1].audioUrl,'https://example.com/a.mp3');assert.equal(parts[1].transcript.length,2);assert.deepEqual(splitSections('[00:00] client: Привет'),[]);
+const files=await readConversationFile(new File([txt],'dialogs.txt'));assert.equal(files.length,2);}
+console.log('CQA checks passed: weighting, N/A, gross flags, appeals, checklist validation, dataset, text, SRT, ISO times, CSV, invalid files, one chat stays one, headed TXT sections.');

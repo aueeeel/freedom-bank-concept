@@ -79,7 +79,25 @@ export async function readConversationFile(file:File,mode:ImportMode='single'):P
  if(ext==='json'){try{return importedConversations(normalizeRecords(JSON.parse(text.replace(/^\uFEFF/,'')),file.name),file.name,mode);}catch(e){if(e instanceof SyntaxError)throw Error('Не удалось прочитать JSON. Проверьте структуру файла.');throw e;}}
  if(ext==='txt'&&/^[\[{]/.test(text.trim())){let structured:unknown;try{structured=JSON.parse(text.replace(/^\uFEFF/,''));}catch{/* Plain timestamped text can also begin with a bracket. */}if(structured!==undefined)return importedConversations(normalizeRecords(structured,file.name),file.name,mode);}
  if(ext==='csv')return normalizeRecords({transcript:csv(text)},file.name);
+ const sections=splitSections(text);
+ // Файл с заголовками «=== id | канал | язык ===» содержит отдельные чаты: каждый заголовок — свой диалог.
+ if(sections.length>1)return importedConversations(sections,file.name,'batch');
+ if(sections.length===1)return sections;
  const transcript=parseText(text);if(!transcript.length)throw Error('В файле не найден текст диалога.');return[newConversation(file.name,transcript,'Не указан')];
+}
+/** Разбирает текст вида «=== syn-ru-151 | agent chat | RU [| audio_url] ===» + реплики на отдельные диалоги. */
+export function splitSections(text:string):Conversation[]{
+ const header=/^\s*===\s*(.+?)\s*===\s*$/;
+ const lines=text.replace(/^﻿/,'').split(/\r?\n/);
+ if(!lines.some(l=>header.test(l)))return[];
+ const out:Conversation[]=[];let current:{fields:string[];body:string[]}|null=null;
+ const flush=()=>{if(!current)return;const transcript=parseText(current.body.join('\n'));if(!transcript.length)return;const [id='',channel='',language='',audio='']=current.fields;
+  const c=newConversation((id||`Диалог ${out.length+1}`).slice(0,160),transcript,language||'Не указан');c.sourceId=id?id.slice(0,160):undefined;c.channel=channel||'agent chat';
+  if(/^https?:\/\//i.test(audio)){try{c.audioUrl=new URL(audio).href;}catch{/* неверная ссылка на аудио не мешает импорту */}}out.push(c);};
+ for(const line of lines){const m=line.match(header);if(m){flush();current={fields:m[1].split('|').map(s=>s.trim()),body:[]};}else if(current)current.body.push(line);}
+ flush();
+ if(out.length>1000)throw Error('В файле должно быть не больше 1000 диалогов.');
+ return out;
 }
 export function timestampSeconds(value:string){if(/^\d{4}-/.test(value)){const ms=Date.parse(value);return Number.isFinite(ms)?ms/1000:null;}const p=value.replace(',','.').split(':').map(Number);if(p.length<2||p.length>3||p.some(n=>!Number.isFinite(n)||n<0))return null;return p.length===2?p[0]*60+p[1]:p[0]*3600+p[1]*60+p[2];}
 export function audioTime(turn:Turn,list:Turn[]){const t=timestampSeconds(turn.timestamp);if(t===null)return null;if(/^\d{4}-/.test(turn.timestamp)){const first=list.map(t=>timestampSeconds(t.timestamp)).find(v=>v!==null);return first===undefined?null:Math.max(0,t-first!);}return t;}
