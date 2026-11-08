@@ -1,4 +1,5 @@
 # Freedom Bank concept · CQA
+Команда: «жи-ши пишется через».
 
 Основной сайт запускается локально: **http://127.0.0.1:4173/check.html**. Выполни `npm run dev` или открой `Start-CQA.cmd`. Полный запуск описан в [LOCAL-PROJECT.md](LOCAL-PROJECT.md).
 
