@@ -25,3 +25,8 @@
 @media(min-width:761px) and (max-width:1000px){.header{padding-left:24px;padding-right:24px;gap:12px}.header .brand{width:145px}.header .language{display:none}.header .header-actions{gap:10px}.header .header-cta{min-width:108px}.segmented-control .segment{padding:0 10px;font-size:11px}}
 @media(max-width:760px){.navigation.segmented-nav{display:none}}
 @media(prefers-reduced-motion:reduce){.segmented-control .segment{transition:none}}
+
+/* Keep the five-section navigation clear on tablets. */
+@media(min-width:761px) and (max-width:1180px){.navigation.segmented-nav{display:none}.header .menu-button{width:42px;height:42px;display:flex;flex-direction:column;gap:6px;justify-content:center;align-items:center;border-radius:50%;border:1px solid #ffffff30;flex-shrink:0}.header .menu-button span{width:16px;height:1px;background:#e1ead8}.header .header-actions{margin-left:auto}.mobile-menu{right:24px;left:auto;width:300px}}
+
+@media(max-width:760px){.header .header-actions .header-cta,.header .header-actions .language{display:none!important}}

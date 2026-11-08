@@ -1,0 +1,64 @@
+import React,{useEffect,useMemo,useRef,useState} from 'react';
+import {createRoot} from 'react-dom/client';
+import {useWorkforceAccess,listEmployees} from './workforce-client';
+import type {Employee} from './workforce-model';
+import {EmployeeAvatar} from './EmployeeAvatar';
+import {findWeaknesses,scenarioFor,basicTopics,type Focus} from './coach-model';
+import {loadCoachReviews,requestCoach,coachConnected,type CoachMessage} from './coach-service';
+
+function CoachPage(){
+ const access=useWorkforceAccess();
+ if(access.loading)return <div className="coach-gate" role="status">Загружаем AI Coach…</div>;
+ return <CoachAccess key={access.user?.id??'guest'} userId={access.user?.id} manager={access.manager} error={access.error}/>;
+}
+function CoachAccess({userId,manager,error}:{userId?:string;manager:boolean;error:string}){
+ const[people,setPeople]=useState<Employee[]>([]),[selected,setSelected]=useState(''),[loading,setLoading]=useState(!!userId),[notice,setNotice]=useState(error),[retry,setRetry]=useState(0),[practice,setPractice]=useState(false);
+ useEffect(()=>{if(!userId)return;let active=true;setLoading(true);setNotice('');listEmployees().then(rows=>{if(!active)return;const allowed=manager?rows:rows.filter(p=>p.user_id===userId);setPeople(allowed);setSelected(old=>allowed.some(p=>p.id===old)?old:allowed[0]?.id??'');}).catch(e=>active&&setNotice(e.message)).finally(()=>active&&setLoading(false));return()=>{active=false;};},[userId,manager,retry]);
+ if(!userId&&!practice)return <section className="coach-gate"><span className="coach-eyebrow">FREEDOM / РАЗВИТИЕ КОМАНДЫ</span><h1>AI Coach</h1><p>Тренируй диалоги с клиентом.<br/>Войди, чтобы увидеть темы по своим проверкам.</p>{notice&&<p role="alert">{notice}</p>}<div className="coach-actions"><button className="button button-primary" onClick={()=>window.FreedomAuth?.open('login')}>Войти</button><button className="button button-secondary" onClick={()=>setPractice(true)}>Попробовать практику</button></div><small>ИИ подключим позже. Сейчас доступен учебный тренажёр с подсказками.</small></section>;
+ if(loading)return <div className="coach-gate" role="status">Загружаем профиль…</div>;
+ if(notice&&userId)return <div className="coach-gate"><h1>AI Coach</h1><p role="alert">{notice}</p><button className="button button-primary" onClick={()=>setRetry(n=>n+1)}>Повторить</button></div>;
+ const person=people.find(p=>p.id===selected);
+ return <><div className="coach-page-heading"><div><span className="coach-eyebrow">FREEDOM WORKSPACE / ПРАКТИКА</span><h1>AI Coach<span>Твой следующий шаг.</span></h1></div>{manager&&people.length>0?<label className="coach-person-picker">Профиль для тренировки<select value={selected} onChange={e=>setSelected(e.target.value)}>{people.map(p=><option key={p.id} value={p.id}>{p.name}</option>)}</select></label>:<a className="coach-back" href="employees.html?mine=1">Мой кабинет</a>}</div>
+ <CoachData key={person?.id??'practice'} person={person} manager={manager} authenticated={!!userId}/></>;
+}
+function CoachData({person,manager,authenticated}:{person?:Employee;manager:boolean;authenticated:boolean}){
+ const[focuses,setFocuses]=useState<Focus[]>([]),[loading,setLoading]=useState(!!person),[error,setError]=useState(''),[retry,setRetry]=useState(0);
+ useEffect(()=>{if(!person)return;const controller=new AbortController();setLoading(true);setError('');loadCoachReviews(person.id,controller.signal).then(rows=>{if(!controller.signal.aborted)setFocuses(findWeaknesses(rows,person.id));}).catch(e=>{if(!controller.signal.aborted)setError(e.message);}).finally(()=>{if(!controller.signal.aborted)setLoading(false);});return()=>controller.abort();},[person?.id,retry]);
+ if(loading)return <div className="coach-gate" role="status">Изучаем завершённые проверки…</div>;
+ if(error)return <div className="coach-gate"><p role="alert">{error}</p><button className="button button-primary" onClick={()=>setRetry(n=>n+1)}>Загрузить историю снова</button></div>;
+ return <CoachWorkspace person={person} focuses={focuses} connected={authenticated&&!!person&&coachConnected()} manager={manager}/>;
+}
+export function CoachWorkspace({person,focuses,connected=false,manager=false}:{person?:Employee;focuses:Focus[];connected?:boolean;manager?:boolean}){
+ const[topic,setTopic]=useState(focuses[0]?.id??'empathy');
+ const focus=focuses.find(f=>f.id===topic);const scenario=useMemo(()=>scenarioFor(topic),[topic]);
+ return <div className="coach-layout"><aside className="coach-sidebar"><div className="coach-person">{person?<EmployeeAvatar person={person}/>:<span className="coach-monogram">C</span>}<div><strong>{person?.name??'Учебная практика'}</strong><small>{manager?'Просмотр руководителя':'Личный тренажёр'}</small></div></div>
+ <div className="coach-side-title">{focuses.length?'Твои точки роста':'Темы для практики'}</div>
+ {!focuses.length&&<p className="coach-muted">{person?'В последних завершённых проверках нет критериев с потерей баллов. Пока выбери тему самостоятельно.':'Персональные темы появятся после привязки профиля и первой завершённой проверки.'}</p>}
+ <div className="coach-topics" aria-label="Темы тренировки">{(focuses.length?focuses:basicTopics).map(item=><button className={'coach-topic '+(topic===item.id?'selected':'')} key={item.id} aria-pressed={topic===item.id} onClick={()=>setTopic(item.id)}><span>{item.name}</span>{'misses'in item&&<small>{item.misses} из {item.samples} проверок</small>}</button>)}</div>
+ {focuses.length>0&&<details className="coach-other"><summary>Другие темы</summary>{basicTopics.filter(t=>!focuses.some(f=>f.id===t.id)).map(item=><button key={item.id} className="coach-topic" aria-pressed={topic===item.id} onClick={()=>setTopic(item.id)}>{item.name}</button>)}</details>}
+ <p className="coach-side-note">{focuses.length?'На основе последних 100 завершённых проверок. Решения по апелляциям учтены.':'Тренировка не меняет рейтинг сотрудника.'}</p></aside>
+ <section className="coach-training" aria-label="Тренировка общения"><div className="coach-training-head"><div><span className="coach-eyebrow">{focus?'ПЕРСОНАЛЬНЫЙ ФОКУС':'УЧЕБНАЯ СИТУАЦИЯ'}</span><h2>{focus?.name??scenario.title}</h2></div><span className="coach-status">{connected?'ИИ подключён':'Учебная практика · без ИИ'}</span></div>
+ {focus&&<details className="coach-evidence"><summary>Почему эта тема · {focus.misses} проверок с потерей баллов</summary><p>{focus.definition}</p>{focus.examples.map(e=><div key={e.id}><p>{e.reason}</p><a href={'employees.html?employee='+encodeURIComponent(person!.id)+'&conversation='+encodeURIComponent(e.id)}>Открыть разбор: {e.name}</a></div>)}</details>}
+ <Practice key={topic+'|'+String(connected)} scenario={scenario} criterionId={topic} employeeId={person?.id} connected={connected}/></section></div>;
+}
+function Practice({scenario,criterionId,employeeId,connected}:{scenario:ReturnType<typeof scenarioFor>;criterionId:string;employeeId?:string;connected:boolean}){
+ const[step,setStep]=useState(0),[draft,setDraft]=useState(''),[messages,setMessages]=useState<CoachMessage[]>([{role:'assistant',text:scenario.steps[0].customer}]),[pending,setPending]=useState(false),[done,setDone]=useState(false),[checks,setChecks]=useState<boolean[]>([]),[revealed,setRevealed]=useState(false),[busy,setBusy]=useState(false),[error,setError]=useState(''),[feedback,setFeedback]=useState(''),[revision,setRevision]=useState(false);
+ const pane=useRef<HTMLDivElement>(null),request=useRef<AbortController|null>(null);
+ useEffect(()=>()=>request.current?.abort(),[]);
+ useEffect(()=>{if(pane.current)pane.current.scrollTop=pane.current.scrollHeight;},[messages,pending,done,feedback]);
+ const current=scenario.steps[step];
+ async function send(e:React.FormEvent){e.preventDefault();const text=draft.trim();if(!text||busy||pending||done)return;setError('');
+ if(connected&&employeeId){const controller=new AbortController();request.current=controller;setBusy(true);try{const next=[...messages,{role:'user' as const,text}];const reply=await requestCoach(employeeId,criterionId,next,controller.signal);if(controller.signal.aborted)return;setMessages([...next,...(reply.customer?[{role:'assistant' as const,text:reply.customer}]:[])]);setFeedback(reply.feedback);setDone(reply.complete||next.length>=39);setDraft('');}catch(e){if(!controller.signal.aborted)setError((e as Error).message);}finally{if(!controller.signal.aborted)setBusy(false);}return;}
+ setMessages(old=>[...old,{role:'user',text}]);setDraft('');setChecks(current.checks.map(()=>false));setPending(true);setRevealed(false);setRevision(false);
+ }
+ function next(){setPending(false);setRevealed(false);setChecks([]);if(step+1===scenario.steps.length){setDone(true);return;}setStep(n=>n+1);setMessages(old=>[...old,{role:'assistant',text:scenario.steps[step+1].customer}]);}
+ function revise(){const last=messages.at(-1);if(last?.role==='user'){setDraft(last.text);setMessages(old=>old.slice(0,-1));setPending(false);setRevision(true);}}
+ function restart(){request.current?.abort();setStep(0);setMessages([{role:'assistant',text:scenario.steps[0].customer}]);setDraft('');setPending(false);setDone(false);setChecks([]);setRevealed(false);setBusy(false);setError('');setFeedback('');setRevision(false);}
+ return <><div className="coach-conversation" ref={pane}><div className="coach-brief"><span className="coach-eyebrow">СИТУАЦИЯ</span><p>{scenario.context}</p><small>{connected?'Ответь клиенту — Coach даст обратную связь.':'Реплики клиента и подсказки подготовлены заранее. Сверяй свой ответ самостоятельно.'}</small></div>
+ <div className="coach-messages" aria-live="polite" aria-relevant="additions">{messages.map((m,i)=><div className={'coach-message '+m.role} key={i}><span>{m.role==='user'?'ТЫ · ОПЕРАТОР':'КЛИЕНТ · УЧЕБНАЯ РОЛЬ'}</span><p>{m.text}</p></div>)}</div>
+ {feedback&&<div className="coach-feedback"><strong>Обратная связь Coach</strong><p>{feedback}</p></div>}
+ {pending&&<section className="coach-feedback"><span className="coach-eyebrow">САМОПРОВЕРКА</span><h3>Что должно быть в ответе</h3><p className="coach-muted">Отметь, что удалось. Это твоя самооценка, а не оценка ИИ.</p>{current.checks.map((check,i)=><label className="coach-check" key={check}><input type="checkbox" checked={checks[i]??false} onChange={e=>setChecks(old=>old.map((v,n)=>n===i?e.target.checked:v))}/><span>{check}</span></label>)}<button className="coach-text-button" aria-expanded={revealed} onClick={()=>setRevealed(v=>!v)}>{revealed?'Скрыть пример':'Посмотреть пример ответа'}</button>{revealed&&<p className="coach-example">{current.example}</p>}<div className="coach-actions"><button className="button button-primary" onClick={next}>{step+1===scenario.steps.length?'Завершить практику':'Следующая реплика'}</button><button className="button button-secondary" onClick={revise}>Улучшить ответ</button></div></section>}
+ {done&&<section className="coach-feedback coach-complete"><span className="coach-eyebrow">ПРАКТИКА ЗАВЕРШЕНА</span><h3>Ещё один шаг вперёд.</h3><p>{connected?'Обратная связь остаётся в этой тренировке.':'Ты прошёл учебную ситуацию. ИИ пока не оценивает твои ответы. Попробуй ещё одну тему слева.'}</p><p className="coach-muted">Оценки разговоров и звёздный рейтинг не изменились.</p><button className="button button-primary" onClick={restart}>Повторить тренировку</button></section>}</div>
+ <form className="coach-composer" onSubmit={send}><div className="coach-composer-meta"><span>{done?'Готово':pending?'Сверь ответ с подсказкой':revision?'Улучши свой ответ':connected?'Диалог с Coach':'Шаг '+(step+1)+' из '+scenario.steps.length}</span><button type="button" className="coach-text-button" disabled={busy||messages.length===1&&!draft} onClick={restart}>Начать заново</button></div><label className="coach-sr" htmlFor="coach-answer">Ответ клиенту</label><textarea id="coach-answer" placeholder={pending?'Продолжи после самопроверки…':'Напиши ответ клиенту…'} maxLength={4000} value={draft} disabled={pending||done||busy} onChange={e=>setDraft(e.target.value)} onKeyDown={e=>{if(e.key==='Enter'&&!e.shiftKey&&!e.nativeEvent.isComposing){e.preventDefault();e.currentTarget.form?.requestSubmit();}}}/><div className="coach-composer-bottom"><small>{connected?'Enter — отправить · Shift + Enter — перенос':'ИИ подключим позже · Enter — отправить'}</small><button type="submit" className="button button-primary" disabled={!draft.trim()||pending||done||busy} data-loading={busy} aria-busy={busy}>Отправить</button></div>{error&&<p role="alert" className="coach-error">{error}</p>}</form><p className="coach-session-note">Тренировка хранится только до ухода со страницы. Не вводи реальные пароли, коды и данные клиентов.</p></>;
+}
+const root=typeof document==='undefined'?null:document.getElementById('coach-root');if(root)createRoot(root).render(<CoachPage/>);
