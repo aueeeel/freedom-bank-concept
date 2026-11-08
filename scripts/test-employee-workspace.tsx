@@ -19,7 +19,7 @@ const callbacks={review,appeals:[pending],busy:false,onClose:()=>{},onAppeal:asy
 const worker=renderToStaticMarkup(<EmployeeReview {...callbacks} manager={false} worker/>);
 assert.ok(worker.includes('Отправить апелляцию'));assert.ok(!worker.includes('Рассмотреть апелляцию'));assert.ok(!worker.includes('Причина решения по апелляции'));
 const manager=renderToStaticMarkup(<EmployeeReview {...callbacks} manager worker={false}/>);
-assert.ok(manager.includes('Рассмотреть апелляцию'));assert.ok(!manager.includes('Отправить апелляцию'));
+assert.ok(manager.includes('Рассмотреть апелляцию'));assert.ok(manager.includes('Подать апелляцию от проверяющего'));assert.ok(!worker.includes('Подать апелляцию от проверяющего'));
 const empty=renderToStaticMarkup(<EmployeeWorkspaceView {...props} history={[]} count={0}/>);assert.ok(empty.includes('Рейтинг появится'));assert.ok(!empty.includes('Назад'));assert.ok(!empty.includes('Далее'));
 const reviewMode=renderToStaticMarkup(<EmployeeWorkspaceView {...props} mode="review"/>);assert.ok(reviewMode.includes('Мои <em>диалоги.</em>'));assert.ok(reviewMode.includes('подать апелляцию'));assert.ok(!reviewMode.includes('МОИ РЕЗУЛЬТАТЫ'));assert.ok(reviewMode.includes('Мои разговоры'));assert.ok(reviewMode.includes('Мои апелляции'));
 console.log('Employee workspace checks passed: personal controls, reviewer controls excluded, review details and appeal roles, empty history, interactive identity card, review page mode.');

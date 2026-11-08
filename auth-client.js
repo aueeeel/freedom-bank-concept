@@ -15,8 +15,8 @@ const account = dialog.querySelector('.account-view');
 const tabs = dialog.querySelector('.auth-tabs');
 let mode = 'login', user = null, busy = false, lastPublishedUser = null;
 
-// Навигация по ролям: «Проверка» видна всегда; сотруднику раздел «Сотрудники» показывается как «Мой кабинет»,
-// а у руководителя вместо «Приложения» — «Апелляции» сотрудников.
+// Навигация по ролям: «Проверка» видна всегда; сотруднику раздел «Сотрудники» показывается как «Мой кабинет».
+// Вошедшим вместо «Приложения» показывается «Апелляции»: руководителю — очередь, сотруднику — его апелляции.
 let role = 'guest', roleRequest = 0;
 function applyRoleNav() {
   document.body.dataset.workspaceRole = role;
@@ -27,7 +27,7 @@ function applyRoleNav() {
     if (appealsPage) { button.setAttribute('aria-checked', 'false'); button.tabIndex = -1; }
   });
   document.querySelectorAll('.segment[data-panel="app"]').forEach(button => {
-    if (role === 'manager') {
+    if (role === 'manager' || role === 'employee') {
       button.textContent = 'Апелляции';
       button.dataset.pageRoute = 'employees.html?tab=appeals';
       button.setAttribute('aria-checked', String(appealsPage));

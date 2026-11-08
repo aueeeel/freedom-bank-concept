@@ -4,7 +4,7 @@
   "version": "1.0.0",
   "scripts": {
     "dev": "node server.cjs",
-    "check": "node --check app.js && node --check media.js && node --check segmented-navbar.js && node --check server.cjs && node --check auth-client.js && node --check employees.js && node --check wave-background.js && node --check qa.js && node --check invite-client.js && node --check invite.js && node --check cqa-local-model.cjs",
+    "check": "node scripts/check.cjs",
     "build": "node scripts/prepare-cloud-checklist.cjs && node scripts/build.cjs",
     "test": "node scripts/test-qa.cjs && node scripts/test-workforce.cjs && node scripts/test-invitations.cjs && node scripts/test-employee-workspace.cjs && npm run test:cloud && node scripts/test-local-model.cjs",
     "test:cloud": "node scripts/test-cloud.mjs && node scripts/test-cloud-client.cjs",
