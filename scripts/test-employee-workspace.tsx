@@ -3,6 +3,7 @@ import React from 'react';
 import {renderToStaticMarkup} from 'react-dom/server';
 import {EmployeeWorkspaceView} from '../src/EmployeeWorkspace';
 import {EmployeeReview} from '../src/EmployeeReview';
+import {employeeAvatarSlot} from '../src/EmployeeAvatar';
 import {workforceDemo,type EmployeeAppeal} from '../src/workforce-model';
 
 const seed=workforceDemo(),person={...seed.people[0],account_email:'employee@example.com'},review={...seed.reviews[0],review_source:'ai' as const};
@@ -10,6 +11,9 @@ const props={person,history:[review],appeals:[],tab:'history' as const,page:0,co
 const home=renderToStaticMarkup(<EmployeeWorkspaceView {...props}/>);
 for(const control of ['Добавить сотрудника','Проверка разговоров','Все сотрудники','Бейджи команды','Учебный пример','Настройки профиля и приглашение'])assert.ok(!home.includes(control),`Employee home exposed reviewer control: ${control}`);
 assert.ok(home.includes('Мои разговоры'));assert.ok(home.includes('Мои апелляции'));assert.ok(home.includes(review.name));assert.ok(home.includes('Перевернуть карточку сотрудника'));
+assert.ok(home.includes('assets/employee-avatars.png'));assert.ok(home.includes('Иллюстрированный аватар:'));
+assert.equal(employeeAvatarSlot('e522428f-71bc-4806-85e8-07e4a45b67c8'),0);assert.equal(employeeAvatarSlot('demo-lera'),3);assert.equal(employeeAvatarSlot('demo-timur'),4);
+for(let n=0;n<100;n++)assert.ok(employeeAvatarSlot('employee-'+n)>=0&&employeeAvatarSlot('employee-'+n)<6);
 const pending:EmployeeAppeal={id:'appeal',conversation_id:review.id,criterion_id:review.checklist[0].id,comment:'Проверьте реплику',author_id:'worker',status:'pending',decision_reason:null,created_at:review.created_at,decided_at:null};
 const callbacks={review,appeals:[pending],busy:false,onClose:()=>{},onAppeal:async()=>{},onDecision:async()=>{}};
 const worker=renderToStaticMarkup(<EmployeeReview {...callbacks} manager={false} worker/>);
@@ -17,4 +21,5 @@ assert.ok(worker.includes('Отправить апелляцию'));assert.ok(!w
 const manager=renderToStaticMarkup(<EmployeeReview {...callbacks} manager worker={false}/>);
 assert.ok(manager.includes('Рассмотреть апелляцию'));assert.ok(!manager.includes('Отправить апелляцию'));
 const empty=renderToStaticMarkup(<EmployeeWorkspaceView {...props} history={[]} count={0}/>);assert.ok(empty.includes('Рейтинг появится'));assert.ok(!empty.includes('Назад'));assert.ok(!empty.includes('Далее'));
-console.log('Employee workspace checks passed: personal controls, reviewer controls excluded, review details and appeal roles, empty history, interactive identity card.');
+const reviewMode=renderToStaticMarkup(<EmployeeWorkspaceView {...props} mode="review"/>);assert.ok(reviewMode.includes('Мои <em>диалоги.</em>'));assert.ok(reviewMode.includes('подать апелляцию'));assert.ok(!reviewMode.includes('МОИ РЕЗУЛЬТАТЫ'));assert.ok(reviewMode.includes('Мои разговоры'));assert.ok(reviewMode.includes('Мои апелляции'));
+console.log('Employee workspace checks passed: personal controls, reviewer controls excluded, review details and appeal roles, empty history, interactive identity card, review page mode.');

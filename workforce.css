@@ -28,3 +28,6 @@ body.invite-page,body.invite-page .header{background:#000;color:#fff}.invite-pag
 @media(prefers-reduced-motion:reduce){.wf-id-card,.wf-id-card:hover{transform:none!important;scale:1}.wf-id-turn{transition:none}.wf-id-foil,.wf-id-glare{transition:none}}
 
 .wf-id-back .wf-stars stop:last-child{stop-color:#e6eee0}.wf-id-back .wf-stars path{stroke:#6d8b50}
+
+/* Generated fictional 3D avatars; one cached atlas for the entire team. */
+.wf-avatar-portrait{position:relative;overflow:hidden;isolation:isolate;background:#08251b;border-color:#b6f34a40;box-shadow:inset 0 0 0 1px #ffffff0a}.wf-avatar-initials{position:absolute;inset:0;display:grid;place-items:center}.wf-avatar-portrait>img{position:absolute;width:300%;height:200%;max-width:none;object-fit:fill;display:block;user-select:none;pointer-events:none}.wf-id-seal{width:18cqw;height:18cqw;transform:rotate(5deg);border-radius:50%;padding:.7cqw;background:linear-gradient(145deg,#dfffbb90,#234d3180);box-shadow:0 10px 24px #062b2570}.wf-id-seal .wf-id-avatar{height:100%;width:100%;border:0;border-radius:50%;box-shadow:none}.wf-id-avatar .wf-avatar-initials{font-size:5cqw}.wf-person-card .wf-avatar-portrait{border-radius:16px}.wf-profile>.wf-avatar-portrait{border-radius:24px}

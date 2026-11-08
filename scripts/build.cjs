@@ -17,7 +17,7 @@ require('./create-invite-page.cjs');
 const output=path.join(root,'dist');
 fs.mkdirSync(path.join(output,'assets'),{recursive:true});
 const files=['index.html','employees.html','check.html','invite.html','invite.js','qa.js','qa.css','workforce.css','qa-config.js','wave-background.js','secondary.css','employees.js','team.css','styles.css','buttons.css','segmented-navbar.css','segmented-navbar.js','auth.css','auth-config.js','auth.js','app.js','media.js','vercel.json'];
-const assets=['background-waves-v2.mp4','background-waves-v2-poster.jpg','card-web.webm','card-poster.png','freedom-logo.png','montserrat-variable.ttf','montserrat-license.txt','segmented-control-license.txt','team-portraits.png','employee-sky.webp','employee-foil.webp','pdf-reader.mjs'];
+const assets=['background-waves-v2.mp4','background-waves-v2-poster.jpg','card-web.webm','card-poster.png','freedom-logo.png','montserrat-variable.ttf','montserrat-license.txt','segmented-control-license.txt','team-portraits.png','employee-sky.webp','employee-foil.webp','employee-avatars.png','pdf-reader.mjs'];
 for(const file of [...files,...assets.map(file=>'assets/'+file)])fs.copyFileSync(path.join(root,file),path.join(output,file));
 fs.copyFileSync(path.join(root,'node_modules/pdfjs-dist/build/pdf.worker.min.mjs'),path.join(root,'assets/pdf.worker.min.mjs'));
 fs.copyFileSync(path.join(root,'assets/pdf.worker.min.mjs'),path.join(output,'assets/pdf.worker.min.mjs'));

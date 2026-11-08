@@ -15,6 +15,42 @@ const account = dialog.querySelector('.account-view');
 const tabs = dialog.querySelector('.auth-tabs');
 let mode = 'login', user = null, busy = false, lastPublishedUser = null;
 
+// Навигация по ролям: «Проверка» видна всегда; сотруднику раздел «Сотрудники» показывается как «Мой кабинет»,
+// а у руководителя вместо «Приложения» — «Апелляции» сотрудников.
+let role = 'guest', roleRequest = 0;
+function applyRoleNav() {
+  document.body.dataset.workspaceRole = role;
+  const appealsPage = /employees\.html$/.test(location.pathname) && new URLSearchParams(location.search).get('tab') === 'appeals';
+  document.querySelectorAll('.segment[data-panel="check"]').forEach(button => { button.hidden = false; });
+  document.querySelectorAll('.segment[data-panel="employees"]').forEach(button => {
+    button.textContent = role === 'employee' ? 'Мой кабинет' : 'Сотрудники';
+    if (appealsPage) { button.setAttribute('aria-checked', 'false'); button.tabIndex = -1; }
+  });
+  document.querySelectorAll('.segment[data-panel="app"]').forEach(button => {
+    if (role === 'manager') {
+      button.textContent = 'Апелляции';
+      button.dataset.pageRoute = 'employees.html?tab=appeals';
+      button.setAttribute('aria-checked', String(appealsPage));
+      button.tabIndex = appealsPage ? 0 : -1;
+    } else {
+      button.textContent = 'Приложение';
+      delete button.dataset.pageRoute;
+    }
+  });
+}
+async function loadRole() {
+  const call = ++roleRequest;
+  let next = 'guest';
+  if (user && client) {
+    try {
+      const {data, error} = await client.from('cqa_managers').select('user_id').eq('user_id', user.id);
+      next = !error && data?.length ? 'manager' : 'employee';
+    } catch { next = 'employee'; }
+  }
+  if (call !== roleRequest) return;
+  role = next;
+  applyRoleNav();
+}
 function updateHeader() {
   document.querySelectorAll('[data-auth="login"]').forEach(button => {
     button.textContent = user ? 'Мой профиль' : 'Войти';
@@ -31,7 +67,7 @@ function renderAccount() {
     if(!account.querySelector('.account-work-profile')){const link=document.createElement('a');link.className='button button-secondary account-work-profile';link.href='employees.html?mine=1';link.textContent='Рабочий профиль';account.append(link);}
   }
   updateHeader();
-  if(lastPublishedUser!==user?.id){lastPublishedUser=user?.id;window.dispatchEvent(new CustomEvent('freedom-auth-change'));}
+  if(lastPublishedUser!==user?.id){lastPublishedUser=user?.id;loadRole();window.dispatchEvent(new CustomEvent('freedom-auth-change'));}
 }
 function setMode(next) {
   mode=next==='signup'?'signup':'login';
@@ -124,4 +160,4 @@ if(client){
     else if(error.status===401||error.status===403){await client.auth.signOut({scope:'local'});user=null;renderAccount();}
   }).catch(()=>{});
 }
-setMode('login');updateHeader();
+setMode('login');updateHeader();applyRoleNav();
